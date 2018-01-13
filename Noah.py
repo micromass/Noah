@@ -11,10 +11,37 @@ def is_prime(n):
 def Modulo(n):
     class aux(object):
         def __init__(self,input):
-            if isinstance(input,str):
-                self.value = int(input) % n
+            if input == "default":
+                self.value = 0
             elif isinstance(input,int):
                 self.value = input % n
+            elif isinstance(input,str):
+                k = FindMainField(input)
+                L = len(input)
+                if k == "Primitive":
+                    self.value = int(input) % n
+                elif input[k] == "(":
+                    hulp = aux(input[1:L-1])
+                    self.value = hulp.value
+                elif input[k] == "-":
+                    if k == 0:
+                        hulp = - aux(input[1:])
+                        self.value = hulp.value
+                    else:
+                        hulp = aux(input[:k]) - aux(input[(k+1):])
+                        self.value = hulp.value
+                elif input[k] == "+":
+                    hulp = aux(input[:k]) + aux(input[(k+1):])
+                    self.value = hulp.value
+                elif input[k] == "*":
+                    hulp = aux(input[:k]) * aux(input[(k+1):])
+                    self.value = hulp.value
+                elif input[k] == "/":
+                    hulp = aux(input[:k]) + aux(input[(k+1):])
+                    self.value = hulp.value
+                elif input[k] == "^":
+                    hulp = aux(input[:k]) ** int(input[(k+1):])
+                    self.value = hulp.value
             else:
                 raise TypeError('Type not recognized')
         def __add__(self,other):
@@ -364,7 +391,7 @@ def RingOfFractions(IntDom):
                         self.numerator = hulp.numerator
                         self.denominator = hulp.denominator
                     elif input[k] == "/":
-                        hulp = aux(input[:k]) + aux(input[(k+1):])
+                        hulp = aux(input[:k]) / aux(input[(k+1):])
                         self.numerator = hulp.numerator
                         self.denominator = hulp.denominator
                     elif input[k] == "^":
@@ -525,6 +552,73 @@ def RingOfFractions(IntDom):
     return aux
 
 
-    
-        
+def MatrixRing(nrow, ncol, Rng):
+    T = type(Rng)
+    if not IsRng(Rng):
+        raise TypeError('Must be presented with rng')
+    if not isinstance(nrow, int):
+        raise TypeError('Number of rows must be an integer')
+    if not isinstance(ncol, int):
+        raise TypeError('Number of columns must be an integer')
+    if nrow < 1:
+        raise TypeError('Numbers of rows must be positive')
+    if ncol <1:
+        raise TypeError('Number of columns must be positive')
+    class aux(object):
+        def __init__(self,input):
+            if input == "default":
+                hulp = [None for i in range(0,nrow)]
+                for rw in range(0, nrow):
+                    hulp[rw] = [None for i in range(0,ncol)]
+                    for cl in range(0, ncol):
+                        hulp[rw][cl] = Zero(Rng)
+                self.value = hulp
+            else:
+                if not len(input) == nrow:
+                    raise TypeError('Insufficient number of rows')
+                else:
+                    hulp = [None for i in range(0,nrow)]
+                    for rw in range(0, nrow):
+                        if not len(input[rw]) == ncol:
+                            raise TypeError("Insufficient number of columns in row" + str(rw+1))
+                        hulp[rw] = [None for i in range(0,ncol)]
+                        for cl in range(0, ncol):
+                            entry = input[rw][cl]
+                            if isinstance(entry, T):
+                                hulp[rw][cl] = entry
+                            elif isinstance(entry,str) or isinstance(entry, int):
+                                hulp[rw][cl] = T(entry)
+                            else:
+                                raise TypeError("Unknown type in entry" + str(rw) + str(cl))
+                    self.value = hulp
+        def getitem(self,rw,cl):
+            if not isinstance(rw, int):
+                 raise TypeError('Row number must be an integer')
+            if not isinstance(cl, int):
+                 raise TypeError('Column number must be an integer')
+            if rw < 1 or rw > nrow:
+                 raise TypeError('Row number not accessible')
+            if cl< 1 or cl > ncol:
+                 raise TypeError('Column number not accessible')
+            return self.value[rw-1][cl-1]
+        def __repr__(self):
+            hulp = ""
+            for rw in range(0,nrow):
+                for cl in range(0,ncol):
+                    if cl == 0:
+                        hulp = hulp + str(self.value[rw][cl])
+                    else:
+                        hulp = hulp + "\t & \t" + str(self.value[rw][cl])
+                hulp = hulp + "\n"
+            return(hulp)
+    return aux
+
+
+
 Q = RingOfFractions(0)
+
+
+
+def GetEntry(mat, rw, cl):
+    return mat.getitem(rw,cl)
+    
