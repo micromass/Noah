@@ -61,7 +61,7 @@ def Modulo(n):
             else:
                 raise TypeError('Arguments are of wrong types')
         def __floordiv__(self,other):
-            if isisntance(other, aux):
+            if isinstance(other, aux):
                 raise TypeError('Arguments are of wrong types')
             elif is_prime(n):
                 return self / other
@@ -69,7 +69,7 @@ def Modulo(n):
                 raise TypeError('Ring is not a Euclidean Domain')
                 
         def __mod__(self,other):
-            if isisntance(other, aux):
+            if isinstance(other, aux):
                 raise TypeError('Arguments are of wrong types')
             elif is_prime(n):
                 return self.ReturnZero()
@@ -268,7 +268,7 @@ def Bezout(a,b):
                 v = int(v - aux*a/g)
             return {'gcd' : g, 'coefficientfirst' : u, 'coefficientsecond' : v}
             
-        
+
     
     
 
