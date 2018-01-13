@@ -2,7 +2,7 @@ Run the following code:
 
 Making field of order 2:
 
-R = Modulo(2)  
+R = Modulo(2)
 
 Arithmetic in the field:
 
@@ -20,10 +20,11 @@ S(4) / S(3)
 
 Ask about properties of the underlying structure
 
-IsCommutativeRing(S(4)) 
+IsCommutativeRing(S(4))
 ^ask wheter S(4) is an element of a commutative ring
 
 Zero(S(4))
 ^Returns the zero element of the field of S(4)
 
 
+micro
