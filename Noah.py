@@ -128,43 +128,100 @@ def Modulo(n):
                         L = list(range(0, bez['gcd']-1))
                         return [aux(sol+int(n/bez['gcd'])*x) for x in L]
         def Invert(self):
-            return self.ReturnIdentity() / self
+            return aux(1) / self
         def __repr__(self):
             return str(self.value)
-        def ReturnZero(self):
+        def ElementOf(self):
+            return internal
+    def internal(input):
+        if input == "name":
+            return "Z_n"
+        elif input == "Zero":
             return aux(0)
-        def ReturnIdentity(self):
+        elif input == "Identity":
             return aux(1)
-        def Commutative(self):
+        elif input == "HasIdentity":
             return True
-        def Identity(self):
+        elif input == "IsRng":
             return True
-        def IsRng(self):
-            return True
-        def HasZeroDivisors(self):
+        elif input == "HasZeroDivisors":
             return not is_prime(n)
-        def HasInverses(self):
-            return is_prime(n)
-        def HasDivAlgo(self):
-            return is_prime(n)
-    return aux
+        elif input == "HasInverses":
+            return not is_prime(n)
+        elif input == "HasDivAlgo":
+            return not is_prime(n)
+        elif input == "IsCommutative":
+            return True
+        else:
+            return aux(input)
+    return(internal)
+    
+def Z(input):
+        if input == "name":
+            return "Z"
+        elif input == "Zero":
+            return int(0)
+        elif input == "Identity":
+            return int(1)
+        elif input == "IsRng":
+            return True
+        elif input == "IsCommutative":
+            return True
+        elif input == "HasZeroDivisors":
+            return False
+        elif input == "HasInverses":
+            return False
+        elif input == "HasDivAlgo":
+            return True
+        elif input == "HasIdentity":
+            return True
+        else:
+            return int(input)
+    
+def R(input):
+        if input == "name":
+            return "R"
+        elif input == "Zero":
+            return int(0)
+        elif input == "Identity":
+            return int(1)
+        elif input == "IsRng":
+            return True
+        elif input == "IsCommutative":
+            return True
+        elif input == "HasZeroDivisors":
+            return False
+        elif input == "HasInverses":
+            return True
+        elif input == "HasDivAlgo":
+            return True
+        else:
+            return float(input)
+
+def ElementOf(a):
+    if isinstance(a,int):
+        return Z
+    elif isinstance(a,float):
+        return R
+    else: 
+        return a.ElementOf()
 
 def Divides(a,b):
     if not type(a)==type(b):
         raise TypeError('Arguments dont have the same type')
-    if IsEuclideanDomain(a):
+    if IsEuclideanDomain(ElementOf(a)):
        return IsZero(b % a)
     else:
         return a.divides(b)
     
 def IsInvertible(a):
-    if not IsRing(a):
+    if not IsRing(ElementOf(a)):
         raise TypeError('Argument are not in ring')
     else:
-        return Divides(a, Identity(a))
+        return Divides(a, Identity(ElementOf(a)))
     
 def Invert(a):
-    if not IsRing:
+    if not IsRing(ElementOf(a)):
         raise TypeError('Argument are not in ring')
     else:
         return a.Invert()
@@ -172,104 +229,59 @@ def Invert(a):
     
 
 def Zero(typ):
-    if isinstance(typ,int):
-        return 0
-    elif isinstance(typ,float):
-        return 0
-    else:
-        return typ.ReturnZero()
+    return typ("Zero")
 
 def Identity(typ):
-    if isinstance(typ,int):
-        return 1
-    elif isinstance(typ,float):
-        return 1
-    else:
-        return typ.ReturnIdentity()
+    return typ("Identity")
 
 def IsRng(typ):
-    if isinstance(typ,int):
-        return True
-    elif isinstance(typ,float):
-        return True
-    else: 
-        return typ.IsRng()
+    return typ("IsRng")
+
+def name(typ):
+    return typ("name")
 
 def IsCommutativeRng(typ):
-    if isinstance(typ,int):
-        return True
-    elif isinstance(typ,float):
-        return True
-    elif IsRng(typ):
-        return typ.Commutative()
-    else:
-        return False
+    return IsRng(typ) and typ("IsCommutative")
 
 
 def IsRing(typ):
-    if isinstance(typ,int):
-        return True
-    elif isinstance(typ,float):
-        return True
-    elif IsRng(typ):
-        return typ.Identity()
-    else:
-        return False
+    return IsRng(typ) and typ("HasIdentity")
+    
 
 def IsCommutativeRing(typ):
     return IsRing(typ) and IsCommutativeRng(typ)
 
 def IsIntegralDomain(typ):
-    if isinstance(typ,int):
-        return True
-    elif isinstance(typ,float):
-        return True
-    elif IsCommutativeRing(typ):
-        return not typ.HasZeroDivisors()
-    else:
-        return False
+    return IsRing(typ) and not typ("HasZeroDivisors")
     
 def IsDivisionRing(typ):
-    if isinstance(typ,int):
-        return False
-    elif isinstance(typ,float):
-        return True
-    elif IsRing(typ):
-        return typ.HasInverses()
-    else:
-        return False
+    return IsRing(typ) and typ("HasInverses")
 
 def IsField(typ):
     return IsDivisionRing(typ) and IsCommutativeRng(typ)
 
 def IsEuclideanDomain(typ):
-    if isinstance(typ,int):
-        return True
-    elif isinstance(typ,float):
-        return False
-    elif IsField(typ):
-        return True
-    elif IsIntegralDomain(typ):
-        return typ.HasDivAlgo()
-    else:
-        return False
+   return IsRing(typ) and typ("HasDivAlgo")
     
 def IsZero(n):
-    if not IsRng(n):
+    if not IsRng(ElementOf(n)):
         raise ValueError('Inputs do not belong to a Rng')
     else:
-        return n == Zero(n)
+        return n == Zero(ElementOf(n))
     
 def IsIdentity(n):
-    if not IsRing(n):
+    if not IsRing(ElementOf(n)):
         raise ValueError('Inputs do not belong to a Ring')
     else:
-        return n == Identity(n)
+        return n == Identity(ElementOf(n))
+    
+def HasSameCategory(n,m):
+    return ElementOf(n) == ElementOf(m)
     
 def ComputeGCD(n,m):
-    if not type(n) == type(m):
+    if not HasSameCategory(n,m):
         raise ValueError('Inputs are not of the same type')
-    elif not IsEuclideanDomain(n):
+    elif not IsEuclideanDomain(ElementOf(n)):
         raise ValueError('Inputs are not elements of a Euclidean Domain')
     elif IsZero(m):
         return n
@@ -277,22 +289,23 @@ def ComputeGCD(n,m):
         return ComputeGCD(m, n % m)
 
 def Bezout(a,b):
-    if not type(a) == type(b):
+    if not HasSameCategory(a,b):
         raise ValueError('Inputs are not of the same type')
-    elif not IsEuclideanDomain(a):
+    elif not IsEuclideanDomain(ElementOf(a)):
         raise ValueError('Inputs are not elements of a Euclidean Domain')
     else:
+        category = ElementOf(a)
         if IsZero(b):
-            return {'gcd' : a, 'coefficientfirst' : Identity(a), 'coefficientsecond' : Zero(a)}
+            return {'gcd' : a, 'coefficientfirst' : Identity(category), 'coefficientsecond' : Zero(category)}
         else:
-            u,g,x,y = Identity(a),a,Zero(a),b
+            u,g,x,y = Identity(category),a,Zero(category),b
             while not IsZero(y):
                 u,g,x,y = x,y,u-x*(g // y), g % y
             v = (g-a*u)/b
-            if isinstance(a,int):
-                aux = math.ceil(-u*g/b)
-                u = int(u + aux*b/g)
-                v = int(v - aux*a/g)
+            if category == Z:
+                aux = math.ceil(-u*g // b)
+                u = u + aux*b//g
+                v = v - aux*a//g
             return {'gcd' : g, 'coefficientfirst' : u, 'coefficientsecond' : v}
 
 def FindMainField(string):
@@ -349,9 +362,8 @@ def FindMainField(string):
             
 
 def RingOfFractions(IntDom):  
-    T = type(IntDom)
     if not IsIntegralDomain(IntDom):
-         raise TypeError('Argument must be an element of an integral domain')
+         raise TypeError('Argument must be an integral domain')
     else:
         A = IsEuclideanDomain(IntDom)
         class aux(object):
@@ -367,7 +379,7 @@ def RingOfFractions(IntDom):
                     k = FindMainField(input)
                     L = len(input)
                     if k == "Primitive":
-                        self.numerator = T(input)
+                        self.numerator = IntDom(input)
                         self.denominator = Identity(IntDom)
                     elif input[k] == "(":
                         hulp = aux(input[1:L-1])
@@ -411,7 +423,7 @@ def RingOfFractions(IntDom):
                         num = num // G
                         denom = denom // G
                     hulp.numerator = num
-                    hulp.denomonator = denom
+                    hulp.denominator = denom
                     return(hulp)
                 else:
                     raise TypeError('Arguments are of wrong types')
@@ -425,7 +437,7 @@ def RingOfFractions(IntDom):
                         num = num // G
                         denom = denom // G
                     hulp.numerator = num
-                    hulp.denomonator = denom
+                    hulp.denominator = denom
                     return(hulp)
                 else:
                     raise TypeError('Arguments are of wrong types')
@@ -549,11 +561,40 @@ def RingOfFractions(IntDom):
                     return(str(self.numerator))
                 else:
                     return "(" + str(self.numerator) + "/" + str(self.denominator) + ")"
-    return aux
+            def ElementOf(self):
+                return internal
+    def internal(input):
+        if input == "name":
+            if IntDom == Z:
+                return "Q"
+            else:
+                return "Q(" + Rng("name") + ")"
+        elif input == "Zero":
+            return aux(Zero(IntDom))
+        elif input == "Identity":
+            return aux(Identity(IntDom))
+        elif input == "HasIdentity":
+            return True
+        elif input == "IsRng":
+            return True
+        elif input == "HasZeroDivisors":
+            return not is_prime(n)
+        elif input == "HasInverses":
+            return not is_prime(n)
+        elif input == "HasDivAlgo":
+            return not is_prime(n)
+        elif input == "IsCommutative":
+            return True
+        elif input == "GroundRing":
+            return IntDom
+        else:
+            return aux(input)
+    return(internal)
+
+Q = RingOfFractions(Z)
 
 
 def MatrixRing(nrow, ncol, Rng):
-    T = type(Rng)
     if not IsRng(Rng):
         raise TypeError('Must be presented with rng')
     if not isinstance(nrow, int):
@@ -587,7 +628,7 @@ def MatrixRing(nrow, ncol, Rng):
                             if isinstance(entry, T):
                                 hulp[rw][cl] = entry
                             elif isinstance(entry,str) or isinstance(entry, int):
-                                hulp[rw][cl] = T(entry)
+                                hulp[rw][cl] = Rng(entry)
                             else:
                                 raise TypeError("Unknown type in entry" + str(rw) + str(cl))
                     self.value = hulp
@@ -611,13 +652,16 @@ def MatrixRing(nrow, ncol, Rng):
                         hulp = hulp + "\t & \t" + str(self.value[rw][cl])
                 hulp = hulp + "\n"
             return(hulp)
-    return aux
-
-
-
-Q = RingOfFractions(0)
-
-
+        def ElementOf(self):
+                return internal
+    def internal(input):
+        if input == "name":
+            return "M_{" + str(nrow) + "," + str(ncol) + "}(" + Rng("name") + ")"
+        elif input == "GroundRing":
+            return Rng
+        else:
+            return aux(input)
+    return(internal)
 
 def GetEntry(mat, rw, cl):
     return mat.getitem(rw,cl)
