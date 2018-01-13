@@ -20,10 +20,12 @@ S(4) / S(3)
 
 Ask about properties of the underlying structure
 
-IsCommutativeRing(S(4))
+ElementOf(S(4)) <-- Find the underlying structure
+
+IsCommutativeRing(ElementOf(S(4)))
 ^ask wheter S(4) is an element of a commutative ring
 
-Zero(S(4))
+Zero(ElementOf(S(4)))
 ^Returns the zero element of the field of S(4)
 
 
@@ -32,7 +34,7 @@ Rational numbers are Q
 Q(2)
 Q("1/2") + Q("1/3")
 Q("(2+2)*3/22")
-Q("3/4")^3
+Q("3/4") ** 3
 
 
 
