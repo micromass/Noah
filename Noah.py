@@ -115,7 +115,7 @@ def Modulo(n):
         def IsRng(self):
             return True
         def HasZeroDivisors(self):
-            return is_prime(n)
+            return not is_prime(n)
         def HasInverses(self):
             return is_prime(n)
         def HasDivAlgo(self):
@@ -198,7 +198,7 @@ def IsIntegralDomain(typ):
     elif isinstance(typ,float):
         return True
     elif IsCommutativeRing(typ):
-        return typ.HasZeroDivisors()
+        return not typ.HasZeroDivisors()
     else:
         return False
     
@@ -267,13 +267,264 @@ def Bezout(a,b):
                 u = int(u + aux*b/g)
                 v = int(v - aux*a/g)
             return {'gcd' : g, 'coefficientfirst' : u, 'coefficientsecond' : v}
+
+def FindMainField(string):
+    L = len(string)
+    Depth = 0
+    var = False
+    bracketoccuring = False
+    for iter in range(0,L-1):
+        if iter>0 and Depth == 0 and string[iter] in ["+","*","-","/","^"]:
+            var=True
+        if string[iter] == "(":
+            Depth = Depth + 1
+            bracketoccuring = True
+        elif string[iter] == ")":
+            Depth = Depth - 1
+        elif string[iter] == "+":
+            if Depth == 0:
+                return iter
+        elif string[iter] == "-":
+            if iter == 0:
+                k = FindMainField(string[1:])
+                if k == "Primitive":
+                    return 0
+                elif string[k+1] == "(":
+                    return 0
+            elif Depth == 0:
+                return iter
+    if not var and bracketoccuring:
+        if string[L-1] == ")":
+                    return 0
+        else:
+            raise ValueError("bracket mismatch")
+    Depth = 0
+    for iter in range(0,L-1):
+        if string[iter] == "(":
+            Depth = Depth + 1
+        elif string[iter] == ")":
+            Depth = Depth - 1
+        elif string[iter] == "*":
+            if Depth == 0:
+                return iter
+        elif string[iter] == "/":
+            if Depth == 0:
+                return iter
+    for iter in range(0,L-1):
+        if string[iter] == "(":
+            Depth = Depth + 1
+        elif string[iter] == ")":
+            Depth = Depth - 1
+        elif string[iter] == "^":
+            if Depth == 0:
+                return iter
+    return("Primitive")
             
 
-    
-    
+def RingOfFractions(IntDom):  
+    T = type(IntDom)
+    if not IsIntegralDomain(IntDom):
+         raise TypeError('Argument must be an element of an integral domain')
+    else:
+        A = IsEuclideanDomain(IntDom)
+        class aux(object):
+            def __init__(self,input):
+                if input == "default":
+                    self.numerator = Zero(IntDom)
+                    self.denominator = Identity(IntDom)
+                elif isinstance(input,int):
+                    hulp = Identity(IntDom) * input
+                    self.numerator = hulp.numerator
+                    self.denominator = hulp.denominator
+                elif isinstance(input,str):
+                    k = FindMainField(input)
+                    L = len(input)
+                    if k == "Primitive":
+                        self.numerator = T(input)
+                        self.denominator = Identity(IntDom)
+                    elif input[k] == "(":
+                        hulp = aux(input[1:L-1])
+                        self.numerator = hulp.numerator
+                        self.denominator = hulp.denominator
+                    elif input[k] == "-":
+                        if k == 0:
+                            hulp = - aux(input[1:])
+                            self.numerator = hulp.numerator
+                            self.denominator = hulp.denominator
+                        else:
+                            hulp = aux(input[:k]) - aux(input[(k+1):])
+                            self.numerator = hulp.numerator
+                            self.denominator = hulp.denominator
+                    elif input[k] == "+":
+                        hulp = aux(input[:k]) + aux(input[(k+1):])
+                        self.numerator = hulp.numerator
+                        self.denominator = hulp.denominator
+                    elif input[k] == "*":
+                        hulp = aux(input[:k]) * aux(input[(k+1):])
+                        self.numerator = hulp.numerator
+                        self.denominator = hulp.denominator
+                    elif input[k] == "/":
+                        hulp = aux(input[:k]) + aux(input[(k+1):])
+                        self.numerator = hulp.numerator
+                        self.denominator = hulp.denominator
+                    elif input[k] == "^":
+                        hulp = aux(input[:k]) ** int(input[(k+1):])
+                        self.numerator = hulp.numerator
+                        self.denominator = hulp.denominator
+                else:
+                    raise TypeError('Type not recognized')
+            
+            def __add__(self,other):
+                if isinstance(other,aux):
+                    hulp = aux("default")
+                    num = (self.numerator * other.denominator) + (self.denominator * other.numerator)
+                    denom = self.denominator*other.denominator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denomonator = denom
+                    return(hulp)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __sub__(self,other):
+                if isinstance(other,aux):
+                    hulp = aux("default")
+                    num = (self.numerator * other.denominator) - (self.denominator * other.numerator)
+                    denom = self.numerator*other.denominator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denomonator = denom
+                    return(hulp)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __mul__(self,other):
+                if isinstance(other,aux):
+                    hulp = aux("default")
+                    num = self.numerator * other.numerator
+                    denom = self.denominator*other.denominator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denominator = denom
+                    return(hulp)
+                elif isinstance(other,int):
+                    hulp = aux("default")
+                    num = self.numerator * other
+                    denom = self.denominator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denominator = denom 
+                    return(hulp)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __rmul__(self,other):
+                if isinstance(other,aux):
+                    hulp = aux("default")
+                    num = self.numerator * other.numerator
+                    denom = self.denominator*other.denominator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denominator = denom
+                    return(hulp)
+                elif isinstance(other,int): 
+                    hulp = aux("default")
+                    num = self.numerator * other
+                    denom = self.denominator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denominator = denom 
+                    return(hulp)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __pow__(self,other):
+                if isinstance(other,int):
+                    hulp = aux("default")
+                    num = self.numerator ** other
+                    denom = self.denominator ** other
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    hulp.numerator = num
+                    hulp.denominator = denom 
+                    return(hulp)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __truediv__(self,other):
+                if isinstance(other,aux):
+                    hulp = aux("default")
+                    num = self.numerator * other.denominator
+                    denom = self.denominator*other.numerator
+                    if A:
+                        G = ComputeGCD(num,denom)
+                        num = num // G
+                        denom = denom // G
+                    if IsZero(denom):
+                        raise ValueError('Division by Zero')
+                    hulp.numerator = num
+                    hulp.denominator = denom
+                    return(hulp)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def divides(self,b):
+                return IsZero(b)
+            def Invert(self):
+                return self.ReturnIdentity() / self
+            def __neg__(self):
+                hulp = aux("default")
+                hulp.numerator = -self.numerator
+                hulp.denominator = self.denominator
+                return hulp
+            def __repr__(self):
+                return str(self.value)
+            def ReturnZero(self):
+                hulp = aux("default")
+                hulp.numerator = Zero(IntDom)
+                hulp.denominator = Identity(IntDom)
+                return(hulp)
+            def ReturnIdentity(self):
+                hulp = aux("default")
+                hulp.numerator = Identity(IntDom)
+                hulp.denominator = Identity(IntDom)
+                return(hulp)
+            def Commutative(self):
+                return True
+            def Identity(self):
+                return True
+            def IsRng(self):
+                return True
+            def HasZeroDivisors(self):
+                False
+            def HasInverses(self):
+                True
+            def HasDivAlgo(self):
+                True
+            def __repr__(self):
+                if IsInvertible(self.denominator):
+                    self.numerator = self.numerator // self.denominator
+                    self.denominator = 1
+                    return(str(self.numerator))
+                else:
+                    return "(" + str(self.numerator) + "/" + str(self.denominator) + ")"
+    return aux
 
 
     
         
-    
-        
+Q = RingOfFractions(0)
