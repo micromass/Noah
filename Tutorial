@@ -33,3 +33,10 @@ Q(2)
 Q("1/2") + Q("1/3")
 Q("(2+2)*3/22")
 Q("3/4")^3
+
+
+
+M = MatrixRing(2,2,Q(1))  <-- makes matrix ring with entries over rationals
+a = M([["1/2", 1],[0,"1/3"]])  <-- makes a matrix
+GetEntry(a,1,2) <-- finds entry (1,2)
+
