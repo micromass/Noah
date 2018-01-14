@@ -23,7 +23,9 @@ b) Using the explicit Binet formula
 9) Functions can be passed as arguments to functions too! Use this to write a function that takes as input a list and an operation, and computes the operation on every input on the list:
 For example [1,2,3] ---> [f(1), f(2), f(3)]
 
-10) Compute and integration function that takes a real-valued function and computes the integral of the function between 0 and 1.
+10)
+a) Compute and integration function that takes a real-valued function and computes the integral of the function between 0 and 1.
+b) Use this function (or a generalization) to compute logarithms with arbitrary base (do NOT use the math package)
 
 11) 
 a) Compute a function that takes as input a list of numbers and orders it.
