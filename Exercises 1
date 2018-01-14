@@ -31,3 +31,11 @@ b) Use this function (or a generalization) to compute logarithms with arbitrary 
 a) Compute a function that takes as input a list of numbers and orders it.
 b) Generalize this function by letting it take as input an ordering relation too, that is a function that compares two numbers.
 c) Generalize the function even further by allowing the inputs of the list to not only be numbers but arbitrary objects, which can be compared using the ordering relation.
+
+12) 
+a) Compute the following functions: sin(x), cos(x), exp(x), tan(x), cotan(x), sec(x), cosec(x)
+b) Represent a complex number by [a,b]. Make functions to compute Real part, Imaginary part, product,
+sum, inverse, difference of complex numbers.
+c) Generalize sin(x), cos(x), exp(x), tan(x), sec(x), cosec(x) to complex numbers
+d) Compute logarithm and powers of complex numbers. Use your program to find out i^i is a real number.
+
