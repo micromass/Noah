@@ -179,5 +179,41 @@ class complex(object):
  The name of the possible operations can be found here: https://docs.python.org/3/reference/datamodel.html
  or here: http://thepythonguru.com/python-operator-overloading/
  
+ 
+ 
  As a further exercise: write your own rational number class.
+
+Let's continue:
+Build a class that mimicks the vector space RxR. So it must have addition and scalar multiplication.
+
+
+
+
+
+Now, once you did this, you can also write one for RxRxR or RxRxRxR, or so on. But do we really need to write them 
+all separately?
+No, we can write a function that outputs the necessary class.
+So we will write a function Tuple, such that if we set
+V = Tuple(3)
+then we can define a tuple as 
+V([1,2,3])
+
+How do we do this:
+def Tuple(n):
+   class aux(object):
+       ALL THE NECESSARY INPUTS
+   
+   output aux
+
+Exercise: complete this
+
+
+What about CxC or CxCxC? We can modify tuple to take as input the ground field. For example
+Tuple(n,complex)
+Tuple(n,float)
+Tuple(n,int)
+
+
+Do this!
+
 
