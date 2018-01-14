@@ -1,4 +1,6 @@
 import math
+import re
+import copy
 
 def is_prime(n):
     d = 2
@@ -16,6 +18,7 @@ def Modulo(n):
             elif isinstance(input,int):
                 self.value = input % n
             elif isinstance(input,str):
+                input = re.sub(' ', '',input)
                 k = FindMainField(input)
                 L = len(input)
                 if k == "Primitive":
@@ -76,7 +79,7 @@ def Modulo(n):
         def __pow__(self,other):
             if isinstance(other, int):
                 if other < 0:
-                    return NotImplemented
+                    return Inverse(self ** (-other))
                 else:
                     a,b,A = self, aux(1), other
                     while A>0:
@@ -99,7 +102,10 @@ def Modulo(n):
             if isinstance(other, aux):
                 raise TypeError('Arguments are of wrong types')
             elif is_prime(n):
-                return self.ReturnZero()
+                if IsZero(other):
+                    return self
+                else: 
+                    return aux(0)
             else:
                 raise TypeError('Ring is not a Euclidean Domain')
         def __neg__(self):
@@ -128,7 +134,10 @@ def Modulo(n):
                         L = list(range(0, bez['gcd']-1))
                         return [aux(sol+int(n/bez['gcd'])*x) for x in L]
         def Invert(self):
-            return aux(1) / self
+            if self.divides(aux(1)):
+                return aux(1) / self
+            else:
+                return("Element does not have an inverse")
         def __repr__(self):
             return str(self.value)
         def ElementOf(self):
@@ -376,6 +385,7 @@ def RingOfFractions(IntDom):
                     self.numerator = hulp.numerator
                     self.denominator = hulp.denominator
                 elif isinstance(input,str):
+                    input = re.sub(' ', '',input)
                     k = FindMainField(input)
                     L = len(input)
                     if k == "Primitive":
@@ -410,6 +420,9 @@ def RingOfFractions(IntDom):
                         hulp = aux(input[:k]) ** int(input[(k+1):])
                         self.numerator = hulp.numerator
                         self.denominator = hulp.denominator
+                elif ElementOf(input) == IntDom:
+                    self.numerator = input
+                    self.denominator = Identity(IntDom)
                 else:
                     raise TypeError('Type not recognized')
             
@@ -493,16 +506,19 @@ def RingOfFractions(IntDom):
                     raise TypeError('Arguments are of wrong types')
             def __pow__(self,other):
                 if isinstance(other,int):
-                    hulp = aux("default")
-                    num = self.numerator ** other
-                    denom = self.denominator ** other
-                    if A:
-                        G = ComputeGCD(num,denom)
-                        num = num // G
-                        denom = denom // G
-                    hulp.numerator = num
-                    hulp.denominator = denom 
-                    return(hulp)
+                    if(other<0):
+                        return(Inverse(self ** (-other)))
+                    else:
+                        hulp = aux("default")
+                        num = self.numerator ** other
+                        denom = self.denominator ** other
+                        if A:
+                            G = ComputeGCD(num,denom)
+                            num = num // G
+                            denom = denom // G
+                        hulp.numerator = num
+                        hulp.denominator = denom 
+                        return(hulp)
                 else:
                     raise TypeError('Arguments are of wrong types')
             def __truediv__(self,other):
@@ -521,6 +537,14 @@ def RingOfFractions(IntDom):
                     return(hulp)
                 else:
                     raise TypeError('Arguments are of wrong types')
+            def __mod__(self,other):
+                if isinstance(other,aux):
+                    if IsZero(other):
+                        return self
+                    else:
+                        return aux(Zero(IntDom))
+            def __floordiv__(self,other):
+                return self / other
             def divides(self,b):
                 return IsZero(b)
             def Invert(self):
@@ -531,30 +555,6 @@ def RingOfFractions(IntDom):
                 hulp.denominator = self.denominator
                 return hulp
             def __repr__(self):
-                return str(self.value)
-            def ReturnZero(self):
-                hulp = aux("default")
-                hulp.numerator = Zero(IntDom)
-                hulp.denominator = Identity(IntDom)
-                return(hulp)
-            def ReturnIdentity(self):
-                hulp = aux("default")
-                hulp.numerator = Identity(IntDom)
-                hulp.denominator = Identity(IntDom)
-                return(hulp)
-            def Commutative(self):
-                return True
-            def Identity(self):
-                return True
-            def IsRng(self):
-                return True
-            def HasZeroDivisors(self):
-                False
-            def HasInverses(self):
-                True
-            def HasDivAlgo(self):
-                True
-            def __repr__(self):
                 if IsInvertible(self.denominator):
                     self.numerator = self.numerator // self.denominator
                     self.denominator = 1
@@ -563,6 +563,15 @@ def RingOfFractions(IntDom):
                     return "(" + str(self.numerator) + "/" + str(self.denominator) + ")"
             def ElementOf(self):
                 return internal
+            def __eq__(self,other):
+                if isinstance(other,aux):
+                    return (self.numerator * other.denominator) == (self.denominator * other.numerator)
+                elif isinstance(other,str):
+                    return False
+                elif ElementOf(other) == IntDom:
+                    return self.numerator == (self.denominator*other)
+                else:
+                    return False
     def internal(input):
         if input == "name":
             if IntDom == Z:
@@ -578,11 +587,11 @@ def RingOfFractions(IntDom):
         elif input == "IsRng":
             return True
         elif input == "HasZeroDivisors":
-            return not is_prime(n)
+            return False
         elif input == "HasInverses":
-            return not is_prime(n)
+            return True
         elif input == "HasDivAlgo":
-            return not is_prime(n)
+            return True
         elif input == "IsCommutative":
             return True
         elif input == "GroundRing":
@@ -666,3 +675,362 @@ def MatrixRing(nrow, ncol, Rng):
 def GetEntry(mat, rw, cl):
     return mat.getitem(rw,cl)
     
+ 
+
+def PolynomialRing(Rng, Variables):  
+    if not IsCommutativeRng(Rng):
+         raise TypeError('Argument must be a commutative ring')
+    if len(Variables) < 1:
+        raise TypeError("Argument does not contain any variables")
+    else:
+        B = IsEuclideanDomain(Rng)
+        C = IsField(Rng)
+        class aux(object):
+            def __init__(self,input):
+                if input == "default":
+                    hulp = [0 for i in range(len(Variables)+1)]
+                    hulp[len(Variables)] = Zero(Rng)
+                    self.value = [hulp]
+                elif isinstance(input,int):
+                    hulp = [0 for i in range(len(Variables)+1)]
+                    hulp[len(Variables)] = Identity(Rng) * input
+                    self.value = [hulp]
+                elif isinstance(input,str):
+                    input = re.sub(' ', '',input)
+                    k = FindMainField(input)
+                    L = len(input)
+                    if k == "Primitive":
+                        if input in Variables:
+                            idx = Variables.index(input)
+                            hulp = [0 for i in range(len(Variables)+1)]
+                            hulp[idx] = 1
+                            hulp[len(Variables)] = Identity(Rng)
+                            self.value = [hulp]
+                        else:
+                            val = Rng(input)
+                            hulp = [0 for i in range(len(Variables)+1)]
+                            hulp[len(Variables)] = val
+                            self.value = [hulp]
+                    elif input[k] == "(":
+                        hulp = aux(input[1:L-1])
+                        self.value = hulp.value
+                    elif input[k] == "-":
+                        if k == 0:
+                            hulp = - aux(input[1:])
+                            self.value = hulp.value
+                        else:
+                            hulp = aux(input[:k]) - aux(input[(k+1):])
+                            self.value = hulp.value
+                    elif input[k] == "+":
+                        hulp = aux(input[:k]) + aux(input[(k+1):])
+                        self.value = hulp.value
+                    elif input[k] == "*":
+                        hulp = aux(input[:k]) * aux(input[(k+1):])
+                        self.value = hulp.value
+                    elif input[k] == "/":
+                        hulp = aux(input[:k]) / aux(input[(k+1):])
+                        self.value = hulp.value
+                    elif input[k] == "^":
+                        hulp = aux(input[:k]) ** int(input[(k+1):])
+                        self.value = hulp.value
+                elif ElementOf(input) == Rng:
+                    hulp = [0 for i in range(len(Variables)+1)]
+                    hulp[len(Variables)] = input
+                    self.value = [hulp]
+                else:
+                    raise TypeError('Type not recognized')
+            
+            def clean(self):
+                L = len(self.value)
+                hulp = []
+                for iter in range(0,L):
+                        if not IsZero(self.value[iter][len(Variables)]):
+                            hulp.append(self.value[iter])
+                if len(hulp) == 0:
+                    hulp.append([0 for i in range(len(Variables)+1)])
+                    hulp[0][len(Variables)] = Zero(Rng)
+                self.value = copy.deepcopy(hulp)    
+            
+            def __add__(self,other):
+                if isinstance(other,aux):
+                    hulp = self.value
+                    hulp2 = other.value
+                    Final = copy.deepcopy(hulp)
+                    L = len(hulp2)
+                    LL = len(hulp)
+                    for iter in range(0,L):
+                        Now = hulp2[iter]
+                        Now2 = None
+                        for iter2 in range(0,LL):
+                            if hulp[iter2][:len(Variables)] == Now[:len(Variables)]:
+                                Now2 = iter2
+                                break
+                        if Now2 == None:
+                            Final.append(Now)
+                        else:
+                            Final[iter2][len(Variables)] = hulp[iter2][len(Variables)] + Now[len(Variables)]
+                    Res = aux("default")
+                    Res.value = copy.deepcopy(Final)
+                    Res.clean()
+                    return Res
+                elif ElementOf(other) == Rng:
+                    return self + aux(other)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+                def __radd__(self,other):
+                    return self + other
+            def __neg__(self):
+                hulp = copy.deepcopy(self.value)
+                L = len(self.value)
+                for iter in range(0,L):
+                    hulp[iter][len(Variables)] = - hulp[iter][len(Variables)]
+                Res = aux("default")
+                Res.value = copy.deepcopy(hulp)
+                Res.clean()
+                return Res
+            def __sub__(self,other):
+                return self + (-other)
+            def __mul__(self,other):
+                if isinstance(other,aux):
+                    hulp = copy.deepcopy(self.value)
+                    hulp2 = copy.deepcopy(other.value)
+                    Final = []
+                    for iter in range(0,len(hulp)):
+                        Now = hulp[iter]
+                        for iter2 in range(0,len(hulp2)):
+                            Now2 = hulp2[iter2]
+                            Now3 = copy.deepcopy(Now2)
+                            for iter3 in range(0,len(Variables)):
+                                Now3[iter3] = Now[iter3] + Now2[iter3]
+                            Now3[len(Variables)] = Now[len(Variables)]*Now2[len(Variables)]
+                            Test = None
+                            for iter4 in range(0,len(Final)):
+                                if Final[iter4][:len(Variables)] == Now3[:len(Variables)]:
+                                    Test = iter4
+                                    break
+                            if Test == None:
+                                Final.append(Now3)
+                            else:
+                                Final[iter4][len(Variables)] = Final[iter4][len(Variables)] + Now3[len(Variables)]
+                    Res = aux("default")
+                    Res.value = copy.deepcopy(Final)
+                    Res.clean()
+                    return Res
+                elif ElementOf(other) == Rng:
+                    return self * aux(other)
+                elif isinstance(other,int):
+                    return self * aux(other)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __rmul__(self,other):
+                return other * self
+            def __pow__(self,other):
+                if isinstance(other,int):
+                    if other < 0:
+                        return(Inverse(self ** (-other)))
+                    elif other == 0:
+                        hulp = [0 for i in range(len(Variables)+1)]
+                        hulp[len(Variables)] = Identity(Rng)
+                        Res = aux("default")
+                        Res.value = copy.deepcopy([hulp])
+                        return Res
+                    else:
+                        if len(self.value) == 1:
+                            hulp = copy.deepcopy(self.value[0])
+                            for iter in range(0,len(Variables)):
+                                hulp[iter] = other*hulp[iter]
+                            hulp[len(Variables)] = hulp[len(Variables)] ** other
+                            Res = aux("default")
+                            Res.value = copy.deepcopy([hulp])
+                            return Res
+                        else:
+                            a,b,A = self, aux("default") ** 0, other
+                            while A>0:
+                                if A % 2 == 1:
+                                    b = b*a
+                                a = a*a
+                                A = math.floor(A/2)
+                            return b    
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def __truediv__(self,other):
+                if isinstance(other,aux):
+                    if not len(other.value) == 1:
+                        raise ValueError('Division is not well defined')
+                    else:
+                        hulp = copy.deepcopy(other.value[0])
+                        for iter in range(0,len(Variables)):
+                            if not hulp[iter] == 0:
+                                raise ValueError('Division is not well defined')
+                        divider = hulp[len(Variables)]
+                        hulp2 = copy.deepcopy(self.value)
+                        for iter in range(0,len(hulp2)):
+                            if not Divides(divider, hulp2[iter][len(Variables)]):
+                                raise ValueError('Division is not well defined')
+                            hulp2[iter][len(Variables)] = hulp2[iter][len(Variables)] // divider
+                        Res = aux("default")
+                        Res.value = copy.deepcopy(hulp2)
+                        Res.clean()
+                        return Res
+                if ElementOf(other) == Rng:
+                    return self / aux(other)
+                else:
+                    raise TypeError('Arguments are of wrong types')
+            def divides(self,b):
+                if isinstance(self,aux):
+                    if not len(self.value) == 1:
+                        return False
+                    hulp = self.value[0]
+                    for iter in range(0,len(Variables)):
+                        if not hulp[iter] == 0:
+                            return False
+                    divider = hulp[len(Variables)]
+                    hulp2 = b.value
+                    for iter in range(0,len(hulp2) - 1):
+                        if not Divides(divider, hulp2[iter][len(Variables)]):
+                            return False
+                    return True
+            def Invert(self):
+                if not(self.value) == 1:
+                    raise ValueError('Element not invertible')
+                hulp = copy.deepcopy(self.value[0])
+                for iter in range(0,len(Variables)):
+                    if not hulp[iter] == 0:
+                        raise ValueError('Element not invertible')
+                hulp[len(Variables)] = Invert(hulp[len(Variables)])
+                Res = aux("default")
+                Res.value = copy.deepcopy([hulp])
+                return Res
+            def __repr__(self):
+                Res = ""
+                self.clean()
+                hulp = self.value
+                if hulp[0][:len(Variables)] == [0 for i in range(len(Variables))]:
+                    Res = Res + str(hulp[0][len(Variables)])
+                else:                   
+                    if not IsIdentity(hulp[0][len(Variables)]):
+                        if (Rng == Z or Rng == R) and hulp[0][len(Variables)] == -1:
+                            Res = Res + "-"
+                            test1 = True
+                        else: 
+                            Res = Res + str(hulp[0][len(Variables)])
+                            test1 = False
+                    else:
+                        test1 = True
+                    for iter2 in range(0,len(Variables)):
+                        now = hulp[0][iter2]
+                        if not now == 0:
+                            if now == 1:
+                                if test1:
+                                    Res = Res + Variables[iter2]
+                                    test1 = False
+                                else: Res = Res + "*" + Variables[iter2]
+                            else:
+                                if test1:
+                                    Res = Res + Variables[iter2] + "^" + str(now)
+                                else:
+                                    Res = Res + "*" + Variables[iter2] + "^" + str(now)
+                if len(hulp) == 1:
+                    return Res
+                else:
+                    for iter in range(1,len(hulp)):
+                        if hulp[iter][:len(Variables)] == [0 for i in range(len(Variables))]:
+                            if Rng == Z or Rng == R:
+                                if hulp[iter][len(Variables)] < 0:
+                                    Res = Res + str(hulp[iter][len(Variables)])
+                                else:
+                                    Res = Res + "+" + str(hulp[iter][len(Variables)])
+                            else:
+                                Res = Res + "+" + str(hulp[iter][len(Variables)])
+                        else:
+                            if not IsIdentity(hulp[iter][len(Variables)]):
+                                if (Rng == Z or Rng == R) and hulp[iter][len(Variables)] == -1:
+                                    Res = Res + "-"
+                                    test1 = True
+                                elif Rng == Z or Rng == R:
+                                    if hulp[iter][len(Variables)] < 0:
+                                        Res = Res + str(hulp[iter][len(Variables)])
+                                    else:
+                                        Res = Res + "+" + str(hulp[iter][len(Variables)])
+                                        
+                                    test1 = False
+                                else: 
+                                    Res = Res + "+" + str(hulp[iter][len(Variables)])
+                                    test1 = False
+                            else:
+                                test1 = True
+                                Res = Res + "+"
+                            for iter2 in range(0,len(Variables)):
+                                now = hulp[iter][iter2]
+                                if not now == 0:
+                                    if now == 1:
+                                        if test1:
+                                            Res = Res + Variables[iter2]
+                                            test1 = False
+                                        else: Res = Res + "*" + Variables[iter2]
+                                    else:
+                                        if test1:
+                                            Res = Res + Variables[iter2] + "^" + str(now)
+                                        else:
+                                            Res = Res + "*" + Variables[iter2] + "^" + str(now)
+                    return Res    
+                        
+                    
+            def ElementOf(self):
+                return internal
+            def __eq__(self, other):
+                if isinstance(other, aux):
+                    hulp = copy.deepcopy(self.value)
+                    hulp2 = copy.deepcopy(other.value)
+                    if not len(hulp) == len(hulp2):
+                        return False
+                    else:
+                        for iter in range(0,len(hulp)):
+                            test = None
+                            for iter2 in range(0,len(hulp2)):
+                                if hulp[iter] == hulp2[iter2]:
+                                    test = iter2
+                                    break
+                            if test == None:
+                                return False
+                            
+                        return True
+                if isinstance(other,str):
+                    return False
+                if ElementOf(other) == Rng:
+                    return self == aux(other)
+                else:
+                    return False
+    def internal(input):
+        if input == "name":
+            res = Rng("name") + "["
+            for iter in range(0,len(Variables)):
+                res = res + Variables[iter]
+                if not iter == len(Variables)-1:
+                    res = res + ","
+                else:
+                    res = res + "]"
+            return(res)
+        elif input == "Zero":
+            return aux(Zero(Rng))
+        elif input == "Identity":
+            return aux(Identity(Rng))
+        elif input == "HasIdentity":
+            return True
+        elif input == "IsRng":
+            return True
+        elif input == "HasZeroDivisors":
+            return Rng("HasZeroDivisors")
+        elif input == "HasInverses":
+            return False
+        elif input == "HasDivAlgo":
+            return IsField(Rng) and len(Variables) == 1
+        elif input == "IsCommutative":
+            return True
+        elif input == "GroundRing":
+            return Rng
+        else:
+            return aux(input)
+    return(internal)
+    
+rng = PolynomialRing(Q,["X","Y","Z"])
