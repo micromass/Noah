@@ -35,7 +35,11 @@ c) Generalize the function even further by allowing the inputs of the list to no
 12) 
 a) Compute the following functions: sin(x), cos(x), exp(x), tan(x), cotan(x), sec(x), cosec(x)
 b) Represent a complex number by [a,b]. Make functions to compute Real part, Imaginary part, product,
-sum, inverse, difference of complex numbers.
+sum, inverse, difference, polar forms of complex numbers.
 c) Generalize sin(x), cos(x), exp(x), tan(x), sec(x), cosec(x) to complex numbers
 d) Compute logarithm and powers of complex numbers. Use your program to find out i^i is a real number.
+e) Compute ALL the nth roots of a complex number where n is a positive integer.
+
+13) DIFFICULT: compute a function that takes as input a real valued function, and outputs
+its derivative in 0 (or more generally: a different number). That is, given as input f, the output must be f'(0).
 
