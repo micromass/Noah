@@ -4,6 +4,28 @@
 4) Write a function that checks a number for primality
 5) Write a function that takes as input a list of numbers and outputs the average of this list
 Notes:
-1) The functions must be robust. For example, if we try to compute the factorial of 0.5, it should give an error.
-2) Try to think about efficiency, for example, the definition of something might not be the most efficient way 
-to program the function (for example the binomial coefficients in (2)).
+a) The functions must be robust. For example, if we try to compute the factorial of 0.5, it should give an error.
+b) Try to think about efficiency, for example, the definition of something might not be the most efficient way to 
+program the function (for example the binomial coefficients in (2)).
+
+6) Define a natural number as a list of strings between '0' and '9'
+For example, the natural number 100 would be the list ['1', '0', '0']
+Find an efficient way to compute the sum, difference, product and powers of natural numbers.
+Compare your algorithm with the actual computation of numbers in python by comparing the system time.
+
+7) Read about the Stirling approximation of the factorial function. Write a function comparing the Stirling approximation, 
+and compare with Ex 1.
+
+8) Compute the Fibonacci numbers in two ways:
+a) Using the definition
+b) Using the explicit Binet formula
+
+9) Functions can be passed as arguments to functions too! Use this to write a function that takes as input a list and an operation, and computes the operation on every input on the list:
+For example [1,2,3] ---> [f(1), f(2), f(3)]
+
+10) Compute and integration function that takes a real-valued function and computes the integral of the function between 0 and 1.
+
+11) 
+a) Compute a function that takes as input a list of numbers and orders it.
+b) Generalize this function by letting it take as input an ordering relation too, that is a function that compares two numbers.
+c) Generalize the function even further by allowing the inputs of the list to not only be numbers but arbitrary objects, which can be compared using the ordering relation.
