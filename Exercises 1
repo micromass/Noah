@@ -1,0 +1,9 @@
+1) Write a function that computes the factorial of a nonnegative integers
+2) Write a function that computes binomial coefficients
+3) Write a function that computing the square root of a floating number
+4) Write a function that checks a number for primality
+5) Write a function that takes as input a list of numbers and outputs the average of this list
+Notes:
+1) The functions must be robust. For example, if we try to compute the factorial of 0.5, it should give an error.
+2) Try to think about efficiency, for example, the definition of something might not be the most efficient way 
+to program the function (for example the binomial coefficients in (2)).
