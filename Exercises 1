@@ -43,3 +43,141 @@ e) Compute ALL the nth roots of a complex number where n is a positive integer.
 13) DIFFICULT: compute a function that takes as input a real valued function, and outputs
 its derivative in 0 (or more generally: a different number). That is, given as input f, the output must be f'(0).
 
+
+CLASSES:
+In Exercise 12, we have seen how to deal with complex numbers. However, there is a much more useful interpretation of complex
+numbers than just [a,b]. This is where a class comes in. Let's build a very simple class
+
+class complex(object)
+    Re = 0
+    Im = 0
+    
+This is a very simple complex numbers class. To define a complex number, just type 
+c = complex()
+
+Then to access/change the complex number values, just do
+c.Re = 1
+c.Im = 2
+to obtain 1+2i
+
+Now, it is much more handy to define 1+2i as
+c = complex(1,2)
+this is where the _init_ comes in:
+
+class complex(object):
+    def __init__(self,a,b):
+        self.Re = a
+        self.Im = b
+        
+Now we can do this. For example
+c = complex(1,2)
+c.Re
+c.Im
+
+If we just type 
+c
+it gives a very ugly output, better to get as output 1+2i. This is where __repr__ comes in. Note that __repr__ 
+MUST output a string.
+
+class complex(object):
+    def __init__(self,a,b):
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+        
+complex(1,2)
+
+However, type:
+complex(1,-2)
+Fix this by adjusting __repr__
+
+It would be nice to add complex numbers as follows:
+c = complex(1,2)
+d = complex(3,4)
+c+d
+
+this is possible:
+class complex(object):
+    def __init__(self,a,b):
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        return complex(self.Re + other.Re, self.Im + other.Im)
+
+Try it!
+However, we should only be able to add complex numbers, otherwise we should get an error. We modify it as follows with 
+the isinstance operator. This operator checks whether the inputs are of the right type:
+
+class complex(object):
+    def __init__(self,a,b):
+        if not isinstance(a,float):
+             raise TypeError('Input should be real numbers')
+        if not isinstance(b,float):
+             raise TypeError('Input should be real numbers')
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        if isinstance(other, complex)
+            return complex(self.Re + other.Re, self.Im + other.Im)           
+        else:    
+            raise TypeError('Can only add two complex numbers')
+        return complex(self.Re + other.Re, self.Im + other.Im)
+
+Of course, something like
+complex(1,2) + 1
+should really be ok, so let's modify further:
+
+class complex(object):
+    def __init__(self,a,b):
+        if not isinstance(a,float):
+             raise TypeError('Input should be real numbers')
+        if not isinstance(b,float):
+             raise TypeError('Input should be real numbers')
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        if isinstance(other, complex)
+            return complex(self.Re + other.Re, self.Im + other.Im) 
+        elif isinstance(other, float)
+            return complex(self.Re + other, self.Im)
+        else:    
+            raise TypeError('Can only add two complex numbers')
+
+But now something like this is not defined:
+1 + complex(1,2)
+This is because + looks at the class of the first argument (which is an int) and takes only the __add__ of the first argument!
+We want to take the addition of the second argument. No problem, this is what __radd__ does:
+
+class complex(object):
+    def __init__(self,a,b):
+        if not isinstance(a,float):
+             raise TypeError('Input should be real numbers')
+        if not isinstance(b,float):
+             raise TypeError('Input should be real numbers')
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        if isinstance(other, complex)
+            return complex(self.Re + other.Re, self.Im + other.Im) 
+        elif isinstance(other, float)
+            return complex(self.Re + other, self.Im)
+        else:    
+            raise TypeError('Can only add two complex numbers')
+     def __radd__(self,other):
+         other + self
+ 
+ This is all you should know about classes now. As an exercise, extend this class further so it can handle other operations.
+ The name of the possible operations can be found here: https://docs.python.org/3/reference/datamodel.html
+ or here: http://thepythonguru.com/python-operator-overloading/
+ 
+ As a further exercise: write your own rational number class.
+
