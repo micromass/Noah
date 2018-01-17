@@ -1,0 +1,219 @@
+1) Write a function that computes the factorial of a nonnegative integers
+2) Write a function that computes binomial coefficients
+3) Write a function that computing the square root of a floating number
+4) Write a function that checks a number for primality
+5) Write a function that takes as input a list of numbers and outputs the average of this list
+Notes:
+a) The functions must be robust. For example, if we try to compute the factorial of 0.5, it should give an error.
+b) Try to think about efficiency, for example, the definition of something might not be the most efficient way to 
+program the function (for example the binomial coefficients in (2)).
+
+6) Define a natural number as a list of strings between '0' and '9'
+For example, the natural number 100 would be the list ['1', '0', '0']
+Find an efficient way to compute the sum, difference, product and powers of natural numbers.
+Compare your algorithm with the actual computation of numbers in python by comparing the system time.
+
+7) Read about the Stirling approximation of the factorial function. Write a function comparing the Stirling approximation, 
+and compare with Ex 1.
+
+8) Compute the Fibonacci numbers in two ways:
+a) Using the definition
+b) Using the explicit Binet formula
+
+9) Functions can be passed as arguments to functions too! Use this to write a function that takes as input a list and an operation, and computes the operation on every input on the list:
+For example [1,2,3] ---> [f(1), f(2), f(3)]
+
+10)
+a) Compute and integration function that takes a real-valued function and computes the integral of the function between 0 and 1.
+b) Use this function (or a generalization) to compute logarithms with arbitrary base (do NOT use the math package)
+
+11) 
+a) Compute a function that takes as input a list of numbers and orders it.
+b) Generalize this function by letting it take as input an ordering relation too, that is a function that compares two numbers.
+c) Generalize the function even further by allowing the inputs of the list to not only be numbers but arbitrary objects, which can be compared using the ordering relation.
+
+12) 
+a) Compute the following functions: sin(x), cos(x), exp(x), tan(x), cotan(x), sec(x), cosec(x)
+b) Represent a complex number by [a,b]. Make functions to compute Real part, Imaginary part, product,
+sum, inverse, difference, polar forms of complex numbers.
+c) Generalize sin(x), cos(x), exp(x), tan(x), sec(x), cosec(x) to complex numbers
+d) Compute logarithm and powers of complex numbers. Use your program to find out i^i is a real number.
+e) Compute ALL the nth roots of a complex number where n is a positive integer.
+
+13) DIFFICULT: compute a function that takes as input a real valued function, and outputs
+its derivative in 0 (or more generally: a different number). That is, given as input f, the output must be f'(0).
+
+
+CLASSES:
+In Exercise 12, we have seen how to deal with complex numbers. However, there is a much more useful interpretation of complex
+numbers than just [a,b]. This is where a class comes in. Let's build a very simple class
+
+class complex(object)
+    Re = 0
+    Im = 0
+    
+This is a very simple complex numbers class. To define a complex number, just type 
+c = complex()
+
+Then to access/change the complex number values, just do
+c.Re = 1
+c.Im = 2
+to obtain 1+2i
+
+Now, it is much more handy to define 1+2i as
+c = complex(1,2)
+this is where the _init_ comes in:
+
+class complex(object):
+    def __init__(self,a,b):
+        self.Re = a
+        self.Im = b
+        
+Now we can do this. For example
+c = complex(1,2)
+c.Re
+c.Im
+
+If we just type 
+c
+it gives a very ugly output, better to get as output 1+2i. This is where __repr__ comes in. Note that __repr__ 
+MUST output a string.
+
+class complex(object):
+    def __init__(self,a,b):
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+        
+complex(1,2)
+
+However, type:
+complex(1,-2)
+Fix this by adjusting __repr__
+
+It would be nice to add complex numbers as follows:
+c = complex(1,2)
+d = complex(3,4)
+c+d
+
+this is possible:
+class complex(object):
+    def __init__(self,a,b):
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        return complex(self.Re + other.Re, self.Im + other.Im)
+
+Try it!
+However, we should only be able to add complex numbers, otherwise we should get an error. We modify it as follows with 
+the isinstance operator. This operator checks whether the inputs are of the right type:
+
+class complex(object):
+    def __init__(self,a,b):
+        if not isinstance(a,float):
+             raise TypeError('Input should be real numbers')
+        if not isinstance(b,float):
+             raise TypeError('Input should be real numbers')
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        if isinstance(other, complex)
+            return complex(self.Re + other.Re, self.Im + other.Im)           
+        else:    
+            raise TypeError('Can only add two complex numbers')
+        return complex(self.Re + other.Re, self.Im + other.Im)
+
+Of course, something like
+complex(1,2) + 1
+should really be ok, so let's modify further:
+
+class complex(object):
+    def __init__(self,a,b):
+        if not isinstance(a,float):
+             raise TypeError('Input should be real numbers')
+        if not isinstance(b,float):
+             raise TypeError('Input should be real numbers')
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        if isinstance(other, complex)
+            return complex(self.Re + other.Re, self.Im + other.Im) 
+        elif isinstance(other, float)
+            return complex(self.Re + other, self.Im)
+        else:    
+            raise TypeError('Can only add two complex numbers')
+
+But now something like this is not defined:
+1 + complex(1,2)
+This is because + looks at the class of the first argument (which is an int) and takes only the __add__ of the first argument!
+We want to take the addition of the second argument. No problem, this is what __radd__ does:
+
+class complex(object):
+    def __init__(self,a,b):
+        if not isinstance(a,float):
+             raise TypeError('Input should be real numbers')
+        if not isinstance(b,float):
+             raise TypeError('Input should be real numbers')
+        self.Re = a
+        self.Im = b
+    def __repr__(self):
+        return str(self.Re) + "+" + str(self.Im) + "i"
+    def __add__(self,other):
+        if isinstance(other, complex)
+            return complex(self.Re + other.Re, self.Im + other.Im) 
+        elif isinstance(other, float)
+            return complex(self.Re + other, self.Im)
+        else:    
+            raise TypeError('Can only add two complex numbers')
+     def __radd__(self,other):
+         other + self
+ 
+ This is all you should know about classes now. As an exercise, extend this class further so it can handle other operations.
+ The name of the possible operations can be found here: https://docs.python.org/3/reference/datamodel.html
+ or here: http://thepythonguru.com/python-operator-overloading/
+ 
+ 
+ 
+ As a further exercise: write your own rational number class.
+
+Let's continue:
+Build a class that mimicks the vector space RxR. So it must have addition and scalar multiplication.
+
+
+
+
+
+Now, once you did this, you can also write one for RxRxR or RxRxRxR, or so on. But do we really need to write them 
+all separately?
+No, we can write a function that outputs the necessary class.
+So we will write a function Tuple, such that if we set
+V = Tuple(3)
+then we can define a tuple as 
+V([1,2,3])
+
+How do we do this:
+def Tuple(n):
+   class aux(object):
+       ALL THE NECESSARY INPUTS
+   
+   output aux
+
+Exercise: complete this
+
+
+What about CxC or CxCxC? We can modify tuple to take as input the ground field. For example
+Tuple(n,complex)
+Tuple(n,float)
+Tuple(n,int)
+
+
+Do this!
+
+
