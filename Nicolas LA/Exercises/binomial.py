@@ -1,4 +1,4 @@
-from operations import calcbinomial
+from operations import calcbinomial_tail, calcbinomial_multiply, calcbinomial_form, calcbinomial_reduce
 
 while True:
     bi_1 = input("Input binomial coefficient in the form (n,r): ")
@@ -9,4 +9,7 @@ while True:
     n = int(data[0])
     r = int(data[1])
 
-    print(calcbinomial(n,r))
+    print("Tail ", calcbinomial_tail(n,r))
+    print("Multiply ", calcbinomial_multiply(n,r))
+    print("Form ", calcbinomial_form(n,r))
+    print("Reduce ",calcbinomial_reduce(n,r))
