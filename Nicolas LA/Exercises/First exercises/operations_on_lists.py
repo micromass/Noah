@@ -1,8 +1,6 @@
 
 from numpy import *
 
-
-
 def g(g_raw,num):
     x = num
     return eval(g_raw)
