@@ -162,6 +162,7 @@ Compare your algorithm with the actual computation of numbers in python by compa
 a) Make a class that represents finite sets. Implement set operations like union, intersection, set difference, power set, comprehension, etc.
 b) Define natural numbers the set theoretic way and define the operations on them.
 c) Define functions and relations the set theoretic way. Try other set theory definitions from Hrbacek.
+d) Using either the natural numbers from 8 or 9, model the integers.
 
 10) Read about the Stirling approximation of the factorial function. Write a function comparing the Stirling approximation, 
 and compare with Ex 1. Compare both accuracy of the approximation as running time.
