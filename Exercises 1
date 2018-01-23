@@ -189,7 +189,11 @@ d) Compute logarithm and powers of complex numbers. Use your program to find out
 e) Compute ALL the nth roots of a complex number where n is a positive integer.
 f) What happens to algorithm in exercise 3 if you let it work on a complex number?
 
-15) Read Chapter 4 of Acheson "from calculus to chaos". Use the three methods there to compute exp(x). Solve the exercises from that chapter with python.
+15) 
+a) Read Chapter 4 of Acheson "from calculus to chaos". Use the three methods there to compute exp(x). 
+b) Solve the exercises from that chapter with python.
+c) Google the Predator-Prey equation and model it using the techniques you've learned.
+d) Model the spread of an epidemic, using https://motherboard.vice.com/en_us/article/nzed5k/how-subtle-differences-in-a-population-can-lead-to-horrific-epidemics
 
 16) DIFFICULT: compute a function that takes as input a real valued function, and outputs
 its derivative in 0 (or more generally: a different number). That is, given as input f, the output must be f'(0).
