@@ -194,6 +194,9 @@ a) Read Chapter 4 of Acheson "from calculus to chaos". Use the three methods the
 b) Solve the exercises from that chapter with python.
 c) Google the Predator-Prey equation and model it using the techniques you've learned.
 d) Model the spread of an epidemic, using https://motherboard.vice.com/en_us/article/nzed5k/how-subtle-differences-in-a-population-can-lead-to-horrific-epidemics
+Try to model some infectuous diseases and less infectuous disease.
+Try to mimick the act of "isolating" patients.
+Try to mimick the act of vaccinating a certain percentage of the population. Relate this with the concept of "herd immunity".
 
 16) DIFFICULT: compute a function that takes as input a real valued function, and outputs
 its derivative in 0 (or more generally: a different number). That is, given as input f, the output must be f'(0).
