@@ -299,3 +299,51 @@ Tuple(n,int)
 c) Do this!
 
 
+
+21) Finding the Hubble constant:
+The following are data on distances and velocities of 24 galaxies containing Cepheid stars, from the Hubble space telescope key project 
+to measure the Hubble constant.
+
+X_1,...X_24: Galaxy distance in mega parsecs (1 parsec is 3.09*10^13 km):
+2.00  9.16 16.14 17.95 21.88  3.22 11.22 11.75  3.63 13.80 10.00 10.52  6.64 15.21 17.70 14.86 16.22 15.78 14.93 21.98 12.36  4.49  3.15 14.72
+
+Y_1,...,Y_24: Galaxy's relative velocity in km/s:
+133  664 1794 1594 1473  278  714  882   80  772  642  768  609 1433  619 1424 1384 1444 1423 1403 1103  318  232  999
+
+A) plot these points on an X-Y frame. Is there a linear relationship between X and Y.
+B) Estimate the best fitting line Y=aX + b as follows:
+B1) Determine theoretically a formula for a and b by minimizing the following function of a and b:
+(a,b) ----> (Y_1 - aX_1 - b)^2 + ... + (Y_24 - aX_24 - b)^2
+Do this by derivatives
+B2) Compute the values for a and b using a computer.
+B3) The estimate for a you have obtained in in units km/(s*Megaparsec). Find the value of the constant in 1/s, this is the hubble constant k.
+B4) 1/k is the age of the universe. Compute this and compare with the current accepted value.
+
+22) Compute the value of e using two methods:
+A) The power series of e^x
+B) The limit of (1 + 1/n)^n. Which one is faster?
+
+23) 
+A) What formulas do you know that approximate pi? Try them
+B) Prove that (5+i)^4 * (239 -i) = 4 * 13^4 * (1+i)
+C) Convert this to polar to prove the formula pi/4 = 4*arctan(1/5) - arctan(1/239)
+D) From the formula in C, compute pi using the power series of arctan. Which algorithm is faster?
+
+24) Try to compute sine(x) using the following methods:
+1) As outlined in the first chapters of the book "Heavenly mathematics" of Van Bummelen, starting page 7 (the historical method)
+2) Using the Taylor series of sine.
+3) Using CORDIC (see wikipedia). Which algorithm is faster?
+
+25) Try to compute log(x) using the following methods:
+1) Using the Taylor series (watch out, this one does not converge everywhere)
+2) By computing the integral of 1/x
+3) The historical method as outlined by Hairer Wanner, "Analysis by its history", starting page 30. Which algorithm is faster?
+
+26)
+A) According to theory, the series SUM 1/n diverges to infinity. Test this: how many sums do you need to take in order for the summation to 
+be larger than 10?
+B) According to theory, the series SUM (-1)^n /n is conditionally convergent. Test this: take many terms and compute the sum of the series.
+Then reorder the series in a nontrivial way and compute the sum again. Do you get different values?
+
+
+
