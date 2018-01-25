@@ -1,6 +1,7 @@
 import math
 import re
 import copy
+import time
 
 def is_prime(n):
     d = 2
@@ -43,7 +44,7 @@ def Modulo(n):
                     hulp = aux(input[:k]) + aux(input[(k+1):])
                     self.value = hulp.value
                 elif input[k] == "^":
-                    hulp = aux(input[:k]) ** int(input[(k+1):])
+                    hulp = aux(input[:k]) ** Z(input[(k+1):])
                     self.value = hulp.value
             else:
                 raise TypeError('Type not recognized')
@@ -184,6 +185,40 @@ def Z(input):
             return True
         elif input == "HasIdentity":
             return True
+        elif isinstance(input,str):
+            input = re.sub(' ', '',input)
+            k = FindMainField(input)
+            L = len(input)
+            if k == "Primitive":
+                return int(input)
+            elif input[k] == "(":
+                return Z(input[1:L-1])
+            elif input[k] == "-":
+                if k == 0:
+                    return - Z(input[1:])
+                else:
+                    return Z(input[:k]) - Z(input[(k+1):])
+            elif input[k] == "+":
+                return Z(input[:k]) + Z(input[(k+1):])
+            elif input[k] == "*":
+                hulp = Z(input[:k]) * Z(input[(k+1):])
+            elif input[k] == "/":
+                hulp1 = Z(input[:k]) 
+                hulp2 = Z(input[(k+1):])
+                if Divides(hulp2, hulp1):
+                    return hulp1 // hulp2
+                else:
+                    raise TypeError("Division not an integer")
+            elif input[k] == "^":
+                hulp1 = Z(input[:k])
+                hulp2 = Z(input[(k+1):])
+                if hulp2 >= 0:
+                    return hulp1 ** hulp2
+                else:
+                    if hulp1 == 1 or hulp1 == -1:
+                        return hulp1 ** (- hulp2)
+                    else:
+                        raise ValueError("Exponentiation not possible")
         else:
             return int(input)
     
@@ -204,6 +239,32 @@ def R(input):
             return True
         elif input == "HasDivAlgo":
             return True
+        elif isinstance(input,str):
+            input = re.sub(' ', '',input)
+            k = FindMainField(input)
+            L = len(input)
+            if k == "Primitive":
+                return float(input)
+            elif input[k] == "(":
+                return R(input[1:L-1])
+            elif input[k] == "-":
+                if k == 0:
+                    return - R(input[1:])
+                else:
+                    return R(input[:k]) - R(input[(k+1):])
+            elif input[k] == "+":
+                return R(input[:k]) + R(input[(k+1):])
+            elif input[k] == "*":
+                hulp = R(input[:k]) * R(input[(k+1):])
+            elif input[k] == "/":
+                hulp1 = R(input[:k]) 
+                hulp2 = R(input[(k+1):])
+                if Divides(hulp2, hulp1):
+                    return hulp1 // hulp2
+                else:
+                    raise ValueError("Division not possible")
+            elif input[k] == "^":
+                return R(input[:k]) ** R(input[(k+1):])
         else:
             return float(input)
 
@@ -214,6 +275,9 @@ def ElementOf(a):
         return R
     else: 
         return a.ElementOf()
+    
+def IsElementOf(a,Rng):
+        return ElementOf(a) == Rng
 
 def Divides(a,b):
     if not type(a)==type(b):
@@ -532,6 +596,10 @@ def RingOfFractions(IntDom):
                         denom = denom // G
                     if IsZero(denom):
                         raise ValueError('Division by Zero')
+                    if IntDom == Z or IntDom == Q:
+                        if denom < 0:
+                            num = - num
+                            denom = -denom
                     hulp.numerator = num
                     hulp.denominator = denom
                     return(hulp)
@@ -603,74 +671,88 @@ def RingOfFractions(IntDom):
 Q = RingOfFractions(Z)
 
 
-def MatrixRing(nrow, ncol, Rng):
+def MatrixRing(Rng):
+    AlreadyDone = []
     if not IsRng(Rng):
         raise TypeError('Must be presented with rng')
-    if not isinstance(nrow, int):
-        raise TypeError('Number of rows must be an integer')
-    if not isinstance(ncol, int):
-        raise TypeError('Number of columns must be an integer')
-    if nrow < 1:
-        raise TypeError('Numbers of rows must be positive')
-    if ncol <1:
-        raise TypeError('Number of columns must be positive')
-    class aux(object):
-        def __init__(self,input):
-            if input == "default":
-                hulp = [None for i in range(0,nrow)]
-                for rw in range(0, nrow):
-                    hulp[rw] = [None for i in range(0,ncol)]
-                    for cl in range(0, ncol):
-                        hulp[rw][cl] = Zero(Rng)
-                self.value = hulp
-            else:
-                if not len(input) == nrow:
-                    raise TypeError('Insufficient number of rows')
-                else:
+    def CreateCat(nrow, ncol):
+        if not isinstance(nrow, int):
+            raise TypeError('Number of rows must be an integer')
+        if not isinstance(ncol, int):
+            raise TypeError('Number of columns must be an integer')
+        if nrow < 1:
+            raise TypeError('Numbers of rows must be positive')
+        if ncol <1:
+            raise TypeError('Number of columns must be positive')
+        class aux(object):
+            def __init__(self,input):
+                if input == "default":
                     hulp = [None for i in range(0,nrow)]
                     for rw in range(0, nrow):
-                        if not len(input[rw]) == ncol:
-                            raise TypeError("Insufficient number of columns in row" + str(rw+1))
                         hulp[rw] = [None for i in range(0,ncol)]
                         for cl in range(0, ncol):
-                            entry = input[rw][cl]
-                            if isinstance(entry, T):
-                                hulp[rw][cl] = entry
-                            elif isinstance(entry,str) or isinstance(entry, int):
-                                hulp[rw][cl] = Rng(entry)
-                            else:
-                                raise TypeError("Unknown type in entry" + str(rw) + str(cl))
+                            hulp[rw][cl] = Zero(Rng)
                     self.value = hulp
-        def getitem(self,rw,cl):
-            if not isinstance(rw, int):
-                 raise TypeError('Row number must be an integer')
-            if not isinstance(cl, int):
-                 raise TypeError('Column number must be an integer')
-            if rw < 1 or rw > nrow:
-                 raise TypeError('Row number not accessible')
-            if cl< 1 or cl > ncol:
-                 raise TypeError('Column number not accessible')
-            return self.value[rw-1][cl-1]
-        def __repr__(self):
-            hulp = ""
-            for rw in range(0,nrow):
-                for cl in range(0,ncol):
-                    if cl == 0:
-                        hulp = hulp + str(self.value[rw][cl])
+                else:
+                    if not len(input) == nrow:
+                        raise TypeError('Insufficient number of rows')
                     else:
-                        hulp = hulp + "\t & \t" + str(self.value[rw][cl])
-                hulp = hulp + "\n"
-            return(hulp)
-        def ElementOf(self):
-                return internal
-    def internal(input):
-        if input == "name":
-            return "M_{" + str(nrow) + "," + str(ncol) + "}(" + Rng("name") + ")"
-        elif input == "GroundRing":
-            return Rng
-        else:
-            return aux(input)
-    return(internal)
+                        hulp = [None for i in range(0,nrow)]
+                        for rw in range(0, nrow):
+                            if not len(input[rw]) == ncol:
+                                raise TypeError("Insufficient number of columns in row" + str(rw+1))
+                            hulp[rw] = [None for i in range(0,ncol)]
+                            for cl in range(0, ncol):
+                                entry = input[rw][cl]
+                                if isinstance(entry, T):
+                                    hulp[rw][cl] = entry
+                                elif isinstance(entry,str) or isinstance(entry, int):
+                                    hulp[rw][cl] = Rng(entry)
+                                else:
+                                    raise TypeError("Unknown type in entry" + str(rw) + str(cl))
+                        self.value = hulp
+            def getitem(self,rw,cl):
+                if not isinstance(rw, int):
+                     raise TypeError('Row number must be an integer')
+                if not isinstance(cl, int):
+                     raise TypeError('Column number must be an integer')
+                if rw < 1 or rw > nrow:
+                     raise TypeError('Row number not accessible')
+                if cl< 1 or cl > ncol:
+                     raise TypeError('Column number not accessible')
+                return self.value[rw-1][cl-1]
+            def __repr__(self):
+                hulp = ""
+                for rw in range(0,nrow):
+                    for cl in range(0,ncol):
+                        if cl == 0:
+                            hulp = hulp + str(self.value[rw][cl])
+                        else:
+                            hulp = hulp + "\t & \t" + str(self.value[rw][cl])
+                    hulp = hulp + "\n"
+                return(hulp)
+            def ElementOf(self):
+                    return internal
+        callnumber = 0
+        def internal(input):
+            if input == "callnumber":
+                callnumber = callnumber + 1
+                return callnumber
+            if input == "name":
+                return "M_{" + str(nrow) + "," + str(ncol) + "}(" + Rng("name") + ")"
+            elif input == "GroundRing":
+                return Rng
+            else:
+                return aux(input)
+    if AlreadyDone == []:
+        AlreadyDone.append([nrow,ncol,internal])
+        return internal
+    else:
+        for iter in range(0,len(AlreadyDone)):
+            if AlreadyDone[iter][0:2] == [nrow, ncol]:
+                return AlreadyDone[iter][2]
+        AlreadyDone.append([nrow,ncol,internal])
+        return internal
 
 def GetEntry(mat, rw, cl):
     return mat.getitem(rw,cl)
@@ -731,7 +813,7 @@ def PolynomialRing(Rng, Variables):
                         hulp = aux(input[:k]) / aux(input[(k+1):])
                         self.value = hulp.value
                     elif input[k] == "^":
-                        hulp = aux(input[:k]) ** int(input[(k+1):])
+                        hulp = aux(input[:k]) ** Z(input[(k+1):])
                         self.value = hulp.value
                 elif ElementOf(input) == Rng:
                     hulp = [0 for i in range(len(Variables)+1)]
@@ -905,6 +987,12 @@ def PolynomialRing(Rng, Variables):
                 Res = ""
                 self.clean()
                 hulp = self.value
+                if VarlistInternalTime == None:
+                    Varlist = copy.deepcopy(VarlistExternal)
+                elif VarlistExternalTime <= VarlistInternalTime:
+                    Varlist = copy.deepcopy(VarlistExternal)
+                else:
+                    Varlist = copy.deepcopy(VarlistInternal)
                 if hulp[0][:len(Variables)] == [0 for i in range(len(Variables))]:
                     Res = Res + str(hulp[0][len(Variables)])
                 else:                   
@@ -918,18 +1006,19 @@ def PolynomialRing(Rng, Variables):
                     else:
                         test1 = True
                     for iter2 in range(0,len(Variables)):
-                        now = hulp[0][iter2]
+                        iter3 = Variables.index(Varlist[iter2])
+                        now = hulp[0][iter3]
                         if not now == 0:
                             if now == 1:
                                 if test1:
-                                    Res = Res + Variables[iter2]
+                                    Res = Res + Variables[iter3]
                                     test1 = False
-                                else: Res = Res + "*" + Variables[iter2]
+                                else: Res = Res + "*" + Variables[iter3]
                             else:
                                 if test1:
-                                    Res = Res + Variables[iter2] + "^" + str(now)
+                                    Res = Res + Variables[iter3] + "^" + str(now)
                                 else:
-                                    Res = Res + "*" + Variables[iter2] + "^" + str(now)
+                                    Res = Res + "*" + Variables[iter3] + "^" + str(now)
                 if len(hulp) == 1:
                     return Res
                 else:
@@ -961,18 +1050,19 @@ def PolynomialRing(Rng, Variables):
                                 test1 = True
                                 Res = Res + "+"
                             for iter2 in range(0,len(Variables)):
-                                now = hulp[iter][iter2]
+                                iter3 = Variables.index(Varlist[iter2])
+                                now = hulp[iter][iter3]
                                 if not now == 0:
                                     if now == 1:
                                         if test1:
-                                            Res = Res + Variables[iter2]
+                                            Res = Res + Variables[iter3]
                                             test1 = False
-                                        else: Res = Res + "*" + Variables[iter2]
+                                        else: Res = Res + "*" + Variables[iter3]
                                     else:
                                         if test1:
-                                            Res = Res + Variables[iter2] + "^" + str(now)
+                                            Res = Res + Variables[iter3] + "^" + str(now)
                                         else:
-                                            Res = Res + "*" + Variables[iter2] + "^" + str(now)
+                                            Res = Res + "*" + Variables[iter3] + "^" + str(now)
                     return Res    
                         
                     
@@ -1001,6 +1091,11 @@ def PolynomialRing(Rng, Variables):
                     return self == aux(other)
                 else:
                     return False
+        VarlistInternal = copy.deepcopy(Variables)
+        VarlistInternalTime = None
+    VarlistExternal = copy.deepcopy(Variables)
+    VarlistExternalTime = time.monotonic()
+    
     def internal(input):
         if input == "name":
             res = Rng("name") + "["
@@ -1029,6 +1124,8 @@ def PolynomialRing(Rng, Variables):
             return True
         elif input == "GroundRing":
             return Rng
+        elif input == "Variables":
+            return Variables
         else:
             return aux(input)
     return(internal)
