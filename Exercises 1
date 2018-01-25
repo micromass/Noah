@@ -311,11 +311,11 @@ Y_1,...,Y_24: Galaxy's relative velocity in km/s:
 133  664 1794 1594 1473  278  714  882   80  772  642  768  609 1433  619 1424 1384 1444 1423 1403 1103  318  232  999
 
 A) plot these points on an X-Y frame. Is there a linear relationship between X and Y.
-B) Estimate the best fitting line Y=aX + b as follows:
+B) Estimate the best fitting line Y=aX as follows:
 B1) Determine theoretically a formula for a and b by minimizing the following function of a and b:
-(a,b) ----> (Y_1 - aX_1 - b)^2 + ... + (Y_24 - aX_24 - b)^2
+(a,b) ----> (Y_1 - aX_1)^2 + ... + (Y_24 - aX_24)^2
 Do this by derivatives
-B2) Compute the values for a and b using a computer.
+B2) Compute the values for a using a computer.
 B3) The estimate for a you have obtained in in units km/(s*Megaparsec). Find the value of the constant in 1/s, this is the hubble constant k.
 B4) 1/k is the age of the universe. Compute this and compare with the current accepted value.
 
