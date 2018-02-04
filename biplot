@@ -1,0 +1,194 @@
+
+biplot <- function(X,alpha = 1,comp1 = 1,comp2 = 2, comp3 = FALSE, scale=TRUE, clus=FALSE, type="col", filename=FALSE) {
+  nc <- ncol(X)
+  Names <- colnames(X)
+  X <- as.matrix(X)
+  keep <- c()
+  for(cl in 1:nc) {
+    stdev <- sd(X[,cl])
+    if(stdev == 0) {next}
+    mn <- mean(X[,cl])
+    X[,cl] <- X[,cl] - mn
+    if(scale) {X[,cl] <- (X[,cl]/stdev)}
+    keep <- c(keep, cl)
+  }
+  X <- X[,keep]
+  nc <- length(keep)
+  Names <- Names[keep]
+  if(type == "col") {
+  if(comp3) {
+    S <- svd(X,nu=0,nv=max(comp1,comp2, comp3))
+    xax <- c()
+    yax <- c()
+    zax <- c()
+    for(cl in 1:nc) {
+      xax <- c(xax, S$d[comp1]^alpha*S$v[cl, comp1])
+      yax <- c(yax, S$d[comp2]^alpha*S$v[cl, comp2])
+      zax <- c(zax, S$d[comp3]^alpha*S$v[cl, comp3])
+    }
+    df <- data.frame(xa = xax, ya = yax, za=zax, nam = Names)
+    df2 <- data.frame(xa = xax, ya = yax, za = zax)
+    for(rw in 1:nc) {
+      df2[3*rw - 2,] <- c(0,0,0)
+      df2[3*rw - 1,] <- c(xax[rw], yax[rw], zax[rw])
+      df2[3*rw,] <- c(NA, NA, NA)
+    }
+    p <- plot_ly()  %>% add_trace( data = df2, x=~xa, y=~ya, z=~za,type='scatter3d', mode = 'lines', text='', line = list(width=1), connectgaps=FALSE, showlegend=FALSE, hoverinfo='none', color=I("pink")) %>% add_trace(data=df, x = ~xa, y = ~ya, z=~za, name=Names,type='scatter3d', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("red"))  %>% layout(title = paste("Biplot of components", comp1, ",", comp2, "and", comp3), scene = list(xaxis=list(title=paste("Component", comp1)), yaxis = list(title=paste("Component", comp2)), zaxis=list(title=paste("Component", comp3))))
+  }
+  else {
+    S <- svd(X,nu=0,nv=max(comp1,comp2))
+    xax <- c()
+    yax <- c()
+    for(cl in 1:nc) {
+      xax <- c(xax, S$d[comp1]^alpha*S$v[cl, comp1])
+      yax <- c(yax, S$d[comp2]^alpha*S$v[cl, comp2])
+    }
+    df <- data.frame(xa = xax, ya = yax, nam = Names)
+    df2 <- data.frame(xa = xax, ya = yax)
+    for(rw in 1:nc) {
+      df2[3*rw - 2,] <- c(0,0)
+      df2[3*rw - 1,] <- c(xax[rw], yax[rw])
+      df2[3*rw,] <- c(NA, NA)
+    }
+    p <- plot_ly() %>% add_trace( data = df2, x=~xa, y=~ya,type='scatter', mode = 'lines', line = list(width=1), connectgaps=FALSE, showlegend=FALSE, hoverinfo='none', color=I("pink")) %>% add_trace(data=df,x = ~xa, y = ~ya, name=Names,type='scatter', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("red")) %>%layout(title = paste("Biplot of components", comp1, "and", comp2), xaxis=list(title=paste("Component", comp1)), yaxis = list(title=paste("Component", comp2)))
+  }
+  }
+  if (type=="row") {
+   if(comp3) {
+      S <- svd(X,nu=max(comp1,comp2,comp3),nv=0)
+      L <- unique(clus)
+      L <- L[!is.na(L)]
+      xax <- c()
+      yax <- c()
+      zax <- c()
+      for(cl in 1:length(L)) {
+        thing <- L[cl]
+        sbst <- S$u[clus == thing & !(is.na(clus)),]
+        if(length(sbst) == max(comp1,comp2,comp3)) {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[comp2]))
+          zax <- c(zax, S$d[comp3]^(1-alpha)*mean(sbst[comp3]))
+        }
+        else {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[,comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[,comp2]))
+          zax <- c(zax, S$d[comp3]^(1-alpha)*mean(sbst[,comp3]))
+        }
+      }
+      df <- data.frame(xa = xax, ya = yax, za=zax, nam = L)
+      p <- plot_ly()  %>% add_trace(data=df, x = ~xa, y = ~ya, z=~za, name=L,type='scatter3d', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("red"))  %>% layout(title = paste("Biplot of components", comp1, ",", comp2, "and", comp3), scene = list(xaxis=list(title=paste("Component", comp1)), yaxis = list(title=paste("Component", comp2)), zaxis=list(title=paste("Component", comp3))))
+    }
+    else {
+      S <- svd(X,nu=max(comp1,comp2),nv=0)
+      L <- unique(clus)
+      L <- L[!is.na(L)]
+      xax <- c()
+      yax <- c()
+      for(cl in 1:length(L)) {
+        thing <- L[cl]
+        sbst <- S$u[clus == thing & !(is.na(clus)),]
+        if(length(sbst) == max(comp1,comp2)) {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[comp2]))
+        }
+        else {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[,comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[,comp2]))
+        }
+      }
+      df <- data.frame(xa = xax, ya = yax, nam = L)
+      p <- plot_ly()  %>% add_trace(data=df,x = ~xa, y = ~ya, name=L,type='scatter', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("red")) %>%layout(title = paste("Biplot of components", comp1, "and", comp2), xaxis=list(title=paste("Component", comp1)), yaxis = list(title=paste("Component", comp2)))
+    }
+  }
+  if (type == "colrow") {
+    if(comp3) {
+      S <- svd(X,nu=max(comp1,comp2,comp3),nv=max(comp1,comp2,comp3))
+      L <- unique(clus)
+      L <- L[!is.na(L)]
+      xax <- c()
+      yax <- c()
+      zax <- c()
+      for(cl in 1:length(L)) {
+        thing <- L[cl]
+        sbst <- S$u[clus == thing & !(is.na(clus)),]
+        if(length(sbst) == max(comp1,comp2,comp3)) {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[comp2]))
+          zax <- c(zax, S$d[comp3]^(1-alpha)*mean(sbst[comp3]))
+        }
+        else {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[,comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[,comp2]))
+          zax <- c(zax, S$d[comp3]^(1-alpha)*mean(sbst[,comp3]))
+        }
+      }
+      xax2 <- c()
+      yax2 <- c()
+      zax2 <- c()
+      for(cl in 1:nc) {
+        xax2 <- c(xax2, S$d[comp1]^alpha*S$v[cl, comp1])
+        yax2 <- c(yax2, S$d[comp2]^alpha*S$v[cl, comp2])
+        zax2 <- c(zax2, S$d[comp3]^alpha*S$v[cl, comp3])
+      }
+      xax <- xax/(range(xax)[2] - range(xax)[1])
+      yax <- yax/(range(yax)[2] - range(yax)[1])
+      zax <- zax/(range(zax)[2] - range(zax)[1])
+      xax2 <- xax2/(range(xax2)[2] - range(xax2)[1])
+      yax2 <- yax2/(range(yax2)[2] - range(yax2)[1])
+      zax2 <- zax2/(range(zax2)[2] - range(zax2)[1])
+      df <- data.frame(xa = xax, ya = yax, za=zax, nam = L)
+      df3 <- data.frame(xa = xax2, ya = yax2, za=zax2, nam = Names)
+      df2 <- data.frame(xa = xax, ya = yax, za = zax)
+      for(rw in 1:nc) {
+        df2[3*rw - 2,] <- c(0,0,0)
+        df2[3*rw - 1,] <- c(xax2[rw], yax2[rw], zax2[rw])
+        df2[3*rw,] <- c(NA, NA, NA)
+      }
+      p <- plot_ly() %>% add_trace(data=df, x = ~xa, y = ~ya, z=~za, name=L,type='scatter3d', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("black")) %>% add_trace( data = df2, x=~xa, y=~ya, z=~za,type='scatter3d', mode = 'lines', text='', line = list(width=1), connectgaps=FALSE, showlegend=FALSE, hoverinfo='none', color=I("pink")) %>% add_trace(data=df3, x = ~xa, y = ~ya, z=~za, name=Names,type='scatter3d', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("red"))  %>% layout(title = paste("Biplot of components", comp1, ",", comp2, "and", comp3), scene = list(xaxis=list(title=paste("Component", comp1)), yaxis = list(title=paste("Component", comp2)), zaxis=list(title=paste("Component", comp3))))
+    }
+    else {
+      S <- svd(X,nu=max(comp1,comp2),nv=max(comp1,comp2))
+      L <- unique(clus)
+      L <- L[!is.na(L)]
+      xax <- c()
+      yax <- c()
+      for(cl in 1:length(L)) {
+        thing <- L[cl]
+        sbst <- S$u[clus == thing & !(is.na(clus)),]
+        if(length(sbst) == max(comp1,comp2)) {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[comp2]))
+        }
+        else {
+          xax <- c(xax, S$d[comp1]^(1-alpha)*mean(sbst[,comp1]))
+          yax <- c(yax, S$d[comp2]^(1-alpha)*mean(sbst[,comp2]))
+        }
+      }
+      xax2 <- c()
+      yax2 <- c()
+      for(cl in 1:nc) {
+        xax2 <- c(xax2, S$d[comp1]^alpha*S$v[cl, comp1])
+        yax2 <- c(yax2, S$d[comp2]^alpha*S$v[cl, comp2])
+      }
+      xax <- xax/(range(xax)[2] - range(xax)[1])
+      yax <- yax/(range(yax)[2] - range(yax)[1])
+      xax2 <- xax2/(range(xax2)[2] - range(xax2)[1])
+      yax2 <- yax2/(range(yax2)[2] - range(yax2)[1])
+      df <- data.frame(xa = xax, ya = yax, nam = L)
+      df3 <- data.frame(xa = xax2, ya = yax2, nam = Names)
+      df2 <- data.frame(xa = xax, ya = yax)
+      for(rw in 1:nc) {
+        df2[3*rw - 2,] <- c(0,0)
+        df2[3*rw - 1,] <- c(xax2[rw], yax2[rw])
+        df2[3*rw,] <- c(NA, NA)
+      }
+      p <- plot_ly() %>% add_trace(data=df, x = ~xa, y = ~ya, name=L,type='scatter', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("black")) %>% add_trace( data = df2, x=~xa, y=~ya, type='scatter', mode = 'lines', text='', line = list(width=1), connectgaps=FALSE, showlegend=FALSE, hoverinfo='none', color=I("pink")) %>% add_trace(data=df3, x = ~xa, y = ~ya, name=Names,type='scatter', mode='text', text=~nam, hoverinfo='text', showlegend=FALSE, color=I("red")) %>% layout(title = paste("Biplot of components", comp1, "and", comp2), xaxis=list(title=paste("Component", comp1)), yaxis = list(title=paste("Component", comp2)))
+      }
+  }
+  if(filename) {
+    htmlwidgets::saveWidget(p, filename)
+  }
+  else{
+    p
+  }
+}
