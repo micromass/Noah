@@ -165,6 +165,8 @@ def Modulo():
                 return not is_prime(n)
             elif input == "IsCommutative":
                 return True
+            elif input == "Ordered":
+                return False
             elif input == "GroundRing":
                 return Z
             elif input == "Structure":
@@ -207,6 +209,8 @@ def Z(input):
         elif input == "HasDivAlgo":
             return True
         elif input == "HasIdentity":
+            return True
+        elif input == "Ordered":
             return True
         elif input == "Structure":
             return "Basic"
@@ -264,6 +268,8 @@ def R(input):
         elif input == "HasInverses":
             return True
         elif input == "HasDivAlgo":
+            return True
+        elif input == "Ordered":
             return True
         elif input == "Structure":
             return "Basic"
@@ -349,6 +355,8 @@ def IsCommutativeRng(typ):
 def IsRing(typ):
     return IsRng(typ) and typ("HasIdentity")
     
+def IsOrderedRing(typ):
+    return IsRing(typ) and typ("Ordered")
 
 def IsCommutativeRing(typ):
     return IsRing(typ) and IsCommutativeRng(typ)
@@ -647,8 +655,8 @@ def RingOfFractionsCreator():
                             denom = denom // G
                         if IsZero(denom):
                             raise ValueError('Division by Zero')
-                        if IntDom == Z or IntDom == Q:
-                            if denom < 0:
+                        if IsOrderedRing(IntDom):
+                            if denom < Zero(IntDom):
                                 num = - num
                                 denom = -denom
                         hulp.numerator = num
@@ -673,11 +681,24 @@ def RingOfFractionsCreator():
                     hulp.numerator = -self.numerator
                     hulp.denominator = self.denominator
                     return hulp
+                def __le__(self,other):
+                    if not IsOrderedRing(IntDom):
+                        return TypeError("Comparison not implemented")
+                    if isinstance(other,aux):
+                        return (self.numerator*otherdenominator) <= (self.denominator * other.numerator)
+                    else:
+                        return TypeError("Comparison not implemented")
+                def __lt__(self,other):
+                    return self <= other and not self == other
+                def __gt__(self,other):
+                    return other < self
+                def __ge__(self,other):
+                    return other <= self
                 def __repr__(self):
                     if IsInvertible(self.denominator):
                         self.numerator = self.numerator // self.denominator
                         self.denominator = 1
-                        return(str(self.numerator))
+                        return str(self.numerator)
                     else:
                         return "(" + str(self.numerator) + "/" + str(self.denominator) + ")"
                 def ElementOf(self):
@@ -715,6 +736,8 @@ def RingOfFractionsCreator():
                 return True
             elif input == "GroundRing":
                 return IntDom
+            elif input == "Ordered":
+                return IsOrderedRing(IntDom)
             elif input == "Structure":
                 return "Localization"
             else:
@@ -827,6 +850,113 @@ def GetEntry(mat, rw, cl):
     
 MatrixRing = MatrixRingCreator()
  
+
+
+
+    
+def LEX(alpha, beta):
+    if not len(alpha) == len(beta):
+        raise ValueError("Arguments not of same length")
+    for iter in range(0,len(alpha)):
+        if alpha[iter] < beta[iter]:
+            return True
+        if alpha[iter] > beta[iter]:
+            return False
+    return False
+
+def GRLEX(alpha, beta):
+    if not len(alpha) == len(beta):
+        raise ValueError("Arguments not of same length")
+    if sum(alpha) < sum(beta):
+        return True
+    if sum(alpha) > sum(beta):
+        return False
+    for iter in range(0,len(alpha)):
+        if alpha[iter] < beta[iter]:
+            return True
+        if alpha[iter] > beta[iter]:
+            return False
+    return False
+
+def GREVLEX(alpha, beta):
+    if not len(alpha) == len(beta):
+        raise ValueError("Arguments not of same length")
+    if sum(alpha) < sum(beta):
+        return True
+    if sum(alpha) > sum(beta):
+        return False
+    n = len(alpha)
+    for iter in range(0,n):
+        if alpha[n-1-iter] < beta[n-1-iter]:
+            return False
+        if alpha[n-1-iter] > beta[n-1-iter]:
+            return True
+    return False
+
+def INVLEX(alpha, beta):
+    if not len(alpha) == len(beta):
+        raise ValueError("Arguments not of same length")
+    n = len(alpha)
+    for iter in range(0,n):
+        if alpha[n-1-iter] < beta[n-1-iter]:
+            return True
+        if alpha[n-1-iter] > beta[n-1-iter]:
+            return False
+    return False
+
+def CREATE_MIXED_ORDER(args):
+    if len(args) == 0:
+        raise ValueError("No order is given")
+    TOT = 0
+    for iter in range(0, len(args)):
+        hlp = args[iter]
+        TOT = TOT + hlp[1]
+    def AUX(alpha, beta):
+        if not len(alpha) == TOT:
+            return ValueError("Argument not of proper length")
+        if not len(beta) == TOT:
+            return ValueError("Argument not of proper length")
+        TOTa = 0
+        for iter in range(0,len(args)):
+            hlp = args[iter]
+            fun = hlp[0]
+            if iter < len(args)-1:
+                if alpha[TOTa:(TOTa + hlp[1])] == beta[TOTa:(TOTa + hlp[1])]:
+                    TOTa = TOTa + hlp[1]
+                    continue
+            if not fun(alpha[TOTa:(TOTa + hlp[1])], beta[TOTa:(TOTa + hlp[1])]):
+                return False
+            if fun(alpha[TOTa:(TOTa + hlp[1])], beta[TOTa:(TOTa + hlp[1])]):
+                return True
+            TOTa = TOTa + hlp[1]
+        return True
+    return AUX
+
+
+def WEIGHT_ORDER(alpha, beta, u, alt):
+    N = len(u)
+    if not len(alpha) == len(beta):
+        raise ValueError("Arguments not of same length")
+    if len(alpha) < len(u):
+        raise ValueError("Arguments not of proper length")
+    res1 = 0
+    res2 = 0
+    if not len(u) == 0:
+        for iter in range(0,N):
+            res1 = res1 + u[iter] * alpha[iter]
+            res2 = res2 + u[iter] * beta[iter]
+    if res1 < res2:
+        return True
+    if res1 > res2:
+        return False
+    if res1 == res2:
+        return alt(alpha,beta)
+
+def CREATE_ELIMINATION_ORDER(l):
+    def AUX(alpha,beta):
+        return WEIGHT_ORDER(alpha,beta, [1 for iter in range(0,l)], GREVLEX)
+    return AUX
+
 
 def PolynomialRingCreator():  
     AlreadyDone = []
@@ -1111,9 +1241,11 @@ def PolynomialRingCreator():
                         raise ValueError("List of new variables does not coincide with old variables")
                     self.VarlistInternal = copy.deepcopy(newvar)
                     self.VarlistInternalTime = time.monotonic()
+                    self.clean()
                 def ChangeOrder(self,neworder):
                     self.OrderInternal = neworder
                     self.OrderInternalTime = time.monotonic()
+                    self.clean()
                 def CurrentVarList(self):
                     if self.VarlistInternalTime == None:
                         Varlist = copy.deepcopy(VarlistExternal)
@@ -1131,7 +1263,24 @@ def PolynomialRingCreator():
                         fun = self.OrderExternal
                     return fun
                 
+                def multideg(self):
+                    self.clean()
+                    return self.value[0][0:len(Variables)]
                 
+                def LC(self):
+                    self.clean()
+                    return self.value[0][len(Variables)]
+                
+                def LT(self):
+                    self.clean()
+                    pol = aux("default")
+                    pol.value = [copy.deepcopy(self.value[0])]
+                    return pol
+                
+                def LM(self):
+                    pol = self.LT()
+                    pol.value[0][len(Variables)] = Identity(Rng)
+                    return pol
                     
                 def ObtainCoefficient(self,mydict):
                     Res = []
@@ -1159,7 +1308,7 @@ def PolynomialRingCreator():
                         Res = Res + str(hulp[0][len(Variables)])
                     else:                   
                         if not IsIdentity(hulp[0][len(Variables)]):
-                            if (Rng == Z or Rng == R) and hulp[0][len(Variables)] == -1:
+                            if IsOrderedRing(Rng) and hulp[0][len(Variables)] == -Identity(Rng):
                                 Res = Res + "-"
                                 test1 = True
                             else: 
@@ -1179,6 +1328,7 @@ def PolynomialRingCreator():
                                 else:
                                     if test1:
                                         Res = Res + Variables[iter3] + "^" + str(now)
+                                        test1 = False
                                     else:
                                         Res = Res + "*" + Variables[iter3] + "^" + str(now)
                     if len(hulp) == 1:
@@ -1189,7 +1339,7 @@ def PolynomialRingCreator():
                     else:
                         for iter in range(1,len(hulp)):
                             if hulp[iter][:len(Variables)] == [0 for i in range(len(Variables))]:
-                                if Rng == Z or Rng == R:
+                                if IsOrderedRing(Rng):
                                     if hulp[iter][len(Variables)] < 0:
                                         Res = Res + str(hulp[iter][len(Variables)])
                                     else:
@@ -1201,7 +1351,7 @@ def PolynomialRingCreator():
                                     if (Rng == Z or Rng == R) and hulp[iter][len(Variables)] == -1:
                                         Res = Res + "-"
                                         test1 = True
-                                    elif Rng == Z or Rng == R:
+                                    elif IsOrderedRing(Rng):
                                         if hulp[iter][len(Variables)] < 0:
                                             Res = Res + str(hulp[iter][len(Variables)])
                                         else:
@@ -1226,6 +1376,7 @@ def PolynomialRingCreator():
                                         else:
                                             if test1:
                                                 Res = Res + Variables[iter3] + "^" + str(now)
+                                                test1 = False
                                             else:
                                                 Res = Res + "*" + Variables[iter3] + "^" + str(now)
                         return "(" + Res + ")"
@@ -1321,10 +1472,6 @@ def PolynomialRingCreator():
     return CreateRing
 
 
-PolynomialRing = PolynomialRingCreator()
-A = PolynomialRing(["X","Y","Z"],Z)
-A("4*X*Y^2*Z + 4*Z^2 - 5*X^3 + 7*X^2*Z^2")
-
 def RecastPolynomial(PolyRing2, Poly):
     VarList1 = []
     VarList2 = []
@@ -1395,113 +1542,68 @@ def Substitute(Poly, mydict, NewVar):
             newstring = newstring + string[iter]
     return NewRing(newstring)
 
-
-    
-def LEX(alpha, beta):
-    if not len(alpha) == len(beta):
-        raise ValueError("Arguments not of same length")
-    for iter in range(0,len(alpha)):
-        if alpha[iter] < beta[iter]:
-            return True
-        if alpha[iter] > beta[iter]:
+def MonomialDivides(mon1, mon2):
+    if not HasSameCategory(mon1, mon2):
+        return TypeError("Monomials are not elements of the same polynomial ring")
+    if len(mon1.value) > 1:
+        return ValueError("First argument is not a monomial")
+    if len(mon2.value) > 1:
+        return ValueError("Second argument is not a monomial")
+    mon1info = mon1.value[0]
+    mon2info = mon2.value[0]
+    for iter in range(0,len(mon1info)):
+        if iter == len(mon1info) - 1:
+            return Divides(mon1info[iter], mon2info[iter])
+        if not mon1info[iter] <= mon2info[iter]:
             return False
-    return False
+        
+def MonomialDivision(mon2, mon1):
+    if not HasSameCategory(mon1, mon2):
+        return TypeError("Monomials are not elements of the same polynomial ring")
+    if len(mon1.value) > 1:
+        return ValueError("First argument is not a monomial")
+    if len(mon2.value) > 1:
+        return ValueError("Second argument is not a monomial") 
+    PolRng = ElementOf(mon1)
+    RES = PolRng("default")
+    mon1info = mon1.value[0]
+    mon2info = mon2.value[0]
+    for iter in range(0,len(mon1info)):
+        if iter == len(mon1info) - 1:
+            RES.value[0][iter] = mon1info[iter] // mon2info[iter]
+        else:
+            RES.value[0][iter] = mon1info[iter]-mon2info[iter]
+    return RES
 
-def GRLEX(alpha, beta):
-    if not len(alpha) == len(beta):
-        raise ValueError("Arguments not of same length")
-    if sum(alpha) < sum(beta):
-        return True
-    if sum(alpha) > sum(beta):
-        return False
-    for iter in range(0,len(alpha)):
-        if alpha[iter] < beta[iter]:
-            return True
-        if alpha[iter] > beta[iter]:
-            return False
-    return False
-
-def GREVLEX(alpha, beta):
-    if not len(alpha) == len(beta):
-        raise ValueError("Arguments not of same length")
-    if sum(alpha) < sum(beta):
-        return True
-    if sum(alpha) > sum(beta):
-        return False
-    n = len(alpha)
-    for iter in range(0,n):
-        if alpha[n-1-iter] < beta[n-1-iter]:
-            return False
-        if alpha[n-1-iter] > beta[n-1-iter]:
-            return True
-    return False
-
-def INVLEX(alpha, beta):
-    if not len(alpha) == len(beta):
-        raise ValueError("Arguments not of same length")
-    n = len(alpha)
-    for iter in range(0,n):
-        if alpha[n-1-iter] < beta[n-1-iter]:
-            return True
-        if alpha[n-1-iter] > beta[n-1-iter]:
-            return False
-    return False
-
-def CREATE_MIXED_ORDER(args):
-    if len(args) == 0:
-        raise ValueError("No order is given")
-    TOT = 0
-    for iter in range(0, len(args)):
-        hlp = args[iter]
-        TOT = TOT + hlp[1]
-    def AUX(alpha, beta):
-        if not len(alpha) == TOT:
-            return ValueError("Argument not of proper length")
-        if not len(beta) == TOT:
-            return ValueError("Argument not of proper length")
-        TOTa = 0
-        for iter in range(0,len(args)):
-            hlp = args[iter]
-            fun = hlp[0]
-            if iter < len(args)-1:
-                if alpha[TOTa:(TOTa + hlp[1])] == beta[TOTa:(TOTa + hlp[1])]:
-                    TOTa = TOTa + hlp[1]
-                    continue
-            if not fun(alpha[TOTa:(TOTa + hlp[1])], beta[TOTa:(TOTa + hlp[1])]):
-                return False
-            if fun(alpha[TOTa:(TOTa + hlp[1])], beta[TOTa:(TOTa + hlp[1])]):
-                return True
-            TOTa = TOTa + hlp[1]
-        return True
-    return AUX
+def DivisionAlgorithm(poly, polylist):
+    PolRng = ElementOf(poly)
+    if len(polylist) == 0:
+        return poly
+    for pol in polylist:
+        if not IsElementOf(pol, PolRng):
+            ValueError("Polynomials not of correct ring")
+    Quolist = [Zero(PolRng) for i in range(0,len(polylist))]
+    Rem = Zero(PolRng)
+    p = poly
+    while not p == Zero(PolRng):
+        i = 0
+        divisionoccured = False
+        while i<=len(polylist)-1 and divisionoccured == False:
+            if MonomialDivides(polylist[i].LT(), p.LT()):
+                div = MonomialDivision(polylist[i].LT(), p.LT())
+                Quolist[i] = Quolist[i] + div
+                p = p - div*polylist[i]
+                divisionoccured = True
+            else:
+                i = i+1
+        if divisionoccured == False:
+            Rem = Rem + p.LT()
+            p = p - p.LT()
+    return {"Quotient":Quolist, "Remainder":Rem}
 
 
-def WEIGHT_ORDER(alpha, beta, u, alt):
-    N = len(u)
-    if not len(alpha) == len(beta):
-        raise ValueError("Arguments not of same length")
-    if len(alpha) < len(u):
-        raise ValueError("Arguments not of proper length")
-    res1 = 0
-    res2 = 0
-    if not len(u) == 0:
-        for iter in range(0,N):
-            res1 = res1 + u[iter] * alpha[iter]
-            res2 = res2 + u[iter] * beta[iter]
-    if res1 < res2:
-        return True
-    if res1 > res2:
-        return False
-    if res1 == res2:
-        return alt(alpha,beta)
-
-def CREATE_ELIMINATION_ORDER(l):
-    def AUX(alpha,beta):
-        return WEIGHT_ORDER(alpha,beta, [1 for iter in range(0,l)], GREVLEX)
-    return AUX
-
-    
-
-
-
-
+PolynomialRing = PolynomialRingCreator()
+A = PolynomialRing(["X","Y","Z"],Q)
+A("ChangeOrder")(LEX)
+MonomialDivides(A("X*Y*Z"), A("X^2*Y^2"))
+DivisionAlgorithm(A("X^7*Y^2 + X^3*Y^2 - Y + 1"), [A("X*Y^2 - X"), A("X-Y^3")])
