@@ -685,7 +685,7 @@ def RingOfFractionsCreator():
                     if not IsOrderedRing(IntDom):
                         return TypeError("Comparison not implemented")
                     if isinstance(other,aux):
-                        return (self.numerator*otherdenominator) <= (self.denominator * other.numerator)
+                        return (self.numerator*other.denominator) <= (self.denominator * other.numerator)
                     else:
                         return TypeError("Comparison not implemented")
                 def __lt__(self,other):
@@ -1340,20 +1340,20 @@ def PolynomialRingCreator():
                         for iter in range(1,len(hulp)):
                             if hulp[iter][:len(Variables)] == [0 for i in range(len(Variables))]:
                                 if IsOrderedRing(Rng):
-                                    if hulp[iter][len(Variables)] < 0:
-                                        Res = Res + str(hulp[iter][len(Variables)])
+                                    if hulp[iter][len(Variables)] < Zero(Rng):
+                                        Res = Res + "-" + str(-hulp[iter][len(Variables)])
                                     else:
                                         Res = Res + "+" + str(hulp[iter][len(Variables)])
                                 else:
                                     Res = Res + "+" + str(hulp[iter][len(Variables)])
                             else:
                                 if not IsIdentity(hulp[iter][len(Variables)]):
-                                    if (Rng == Z or Rng == R) and hulp[iter][len(Variables)] == -1:
+                                    if IsOrderedRing(Rng) and hulp[iter][len(Variables)] == -Identity(Rng):
                                         Res = Res + "-"
                                         test1 = True
                                     elif IsOrderedRing(Rng):
-                                        if hulp[iter][len(Variables)] < 0:
-                                            Res = Res + str(hulp[iter][len(Variables)])
+                                        if hulp[iter][len(Variables)] < Zero(Rng):
+                                            Res = Res + "-" + str(-hulp[iter][len(Variables)])
                                         else:
                                             Res = Res + "+" + str(hulp[iter][len(Variables)])
                                             
@@ -1424,6 +1424,10 @@ def PolynomialRingCreator():
                     return(res)
                 elif input == "Zero":
                     return aux(Zero(Rng))
+                elif input == "CurrentVarlist":
+                    return VarlistExternal
+                elif input == "CurrentOrder":
+                    return OrderExternal
                 elif input == "Identity":
                     return aux(Identity(Rng))
                 elif input == "HasIdentity":
@@ -1449,11 +1453,15 @@ def PolynomialRingCreator():
                 elif input == "ChangeOrderVar":
                     def reordering(NewVar):
                         check(NewVar)
+                        nonlocal VarlistExternal
+                        nonlocal VarlistExternalTime
                         VarlistExternal = copy.deepcopy(Variables)
-                        varlistExternalTime = time.monotonic()
+                        VarlistExternalTime = time.monotonic()
                     return reordering
                 elif input == "ChangeOrder":
                     def reorder(neworder):
+                        nonlocal OrderExternal
+                        nonlocal OrderExternalTime
                         OrderExternal = neworder
                         OrderExternalTime = time.monotonic()
                     return reorder
@@ -1507,7 +1515,7 @@ def RecastPolynomial(PolyRing2, Poly):
 
 def ListEqualAsSet(list1, list2):
     L = len(list1)
-    if not L == len(list1):
+    if not L == len(list2):
         return False
     if L == 0:
         return True
@@ -1575,6 +1583,31 @@ def MonomialDivision(mon2, mon1):
             RES.value[0][iter] = mon1info[iter]-mon2info[iter]
     return RES
 
+def MonomialLCM(mon2, mon1):
+    if not HasSameCategory(mon1, mon2):
+        return TypeError("Monomials are not elements of the same polynomial ring")
+    if len(mon1.value) > 1:
+        return ValueError("First argument is not a monomial")
+    if len(mon2.value) > 1:
+        return ValueError("Second argument is not a monomial") 
+    PolRng = ElementOf(mon1)
+    GrRng = PolRng("GroundRing")
+    RES = PolRng("default")
+    mon1info = mon1.value[0]
+    mon2info = mon2.value[0]
+    for iter in range(0,len(mon1info)):
+        if iter == len(mon1info) - 1:
+            RES.value[0][iter] = Identity(GrRng)
+        else:
+            RES.value[0][iter] = max(mon1info[iter],mon2info[iter])
+    return RES
+
+def Spoly(f,g):
+    if not HasSameCategory(f,g):
+        return TypeError("Monomials are not elements of the same polynomial ring")
+    lc = MonomialLCM(f.LM(),g.LM())
+    return MonomialDivision(f.LT(),lc)*f - MonomialDivision(g.LT(),lc)*g
+
 def DivisionAlgorithm(poly, polylist):
     PolRng = ElementOf(poly)
     if len(polylist) == 0:
@@ -1601,9 +1634,153 @@ def DivisionAlgorithm(poly, polylist):
             p = p - p.LT()
     return {"Quotient":Quolist, "Remainder":Rem}
 
+def OrderedPairs(n):
+    if n == 0:
+        return []
+    else:
+        res = []
+        for i in range(0,n):
+            for j in range(i+1,n):
+                res.append([i,j])
+    return res
+
+def FindGrobner(listt):
+    if len(listt) == 0:
+        return listt
+    B = OrderedPairs(len(listt))
+    notB = []
+    G = copy.deepcopy(listt)
+    t = len(listt)
+    def CRITERION(i,j):
+        for k in range(0,t) :
+            if k==i or k == j:
+                next
+            if [i,k] in notB and [j,k] in notB:
+                if MonomialDivides(G[k].LT(), MonomialLCM(G[i].LT(), G[j].LT())):
+                    return True
+                else:
+                    continue
+        return False
+    def ADD(a):
+        res = copy.deepcopy(B)
+        for k in range(0,a-1):
+            res.append([k,a-1])
+        return res
+    while len(B) > 0:
+        K1 = B[0][0]
+        K2 = B[0][1]
+        f1 = G[K1]
+        f2 = G[K2]
+        if MonomialLCM(f1.LT(), f2.LT()) == f1.LT()*f2.LT():
+            notB.append(B[0])
+            del B[0]
+            continue
+        if CRITERION(K1, K2):
+            notB.append(B[0])
+            del B[0]
+            continue
+        S = DivisionAlgorithm(Spoly(f1,f2),G)["Remainder"]
+        if IsZero(S):
+            notB.append(B[0])
+            del B[0]
+            continue
+        t = t+1
+        G.append(S)
+        B = ADD(t)
+        notB.append(B[0])
+        del B[0]
+    return ReduceGrobner(MinimizeGrobner(G))
+
+     
+def IsGrobner(listt):
+    if len(listt) == 0:
+        return listt
+    B = OrderedPairs(len(listt))
+    notB = []
+    G = copy.deepcopy(listt)
+    t = len(listt)
+    def CRITERION(i,j):
+        for k in range(0,t) :
+            if k==i or k == j:
+                next
+            if [i,k] in notB and [j,k] in notB:
+                if MonomialDivides(G[k].LT(), MonomialLCM(G[i].LT(), G[j].LT())):
+                    return True
+                else:
+                    continue
+        return False
+    def ADD(a):
+        res = copy.deepcopy(B)
+        for k in range(0,a-1):
+            res.append([k,a-1])
+        return res
+    while len(B) > 0:
+        K1 = B[0][0]
+        K2 = B[0][1]
+        f1 = G[K1]
+        f2 = G[K2]
+        if MonomialLCM(f1.LT(), f2.LT()) == f1.LT()*f2.LT():
+            notB.append(B[0])
+            del B[0]
+            continue
+        if CRITERION(K1, K2):
+            notB.append(B[0])
+            del B[0]
+            continue
+        S = DivisionAlgorithm(Spoly(f1,f2),G)["Remainder"]
+        if IsZero(S):
+            notB.append(B[0])
+            del B[0]
+            continue
+        return False
+    return True
+
+def MinimizeGrobner(listt):
+    G = []
+    LTG = []
+    for f in listt:
+        G.append(f/f.LC())
+        LTG.append(f.LM())
+    for l in range(0,len(G)):
+        k = len(listt)-1-l
+        lead = G[k].LM()
+        divlist = []
+        for iter in range(0,len(LTG)):
+            if iter == k:
+                continue
+            else:
+                divlist.append(LTG[iter])
+        div = DivisionAlgorithm(lead,divlist)["Remainder"]
+        if IsZero(div):
+            del G[k]
+            del LTG[k]
+    return G
+
+
+def ReduceGrobner(listt):
+    G = copy.deepcopy(listt)
+    for k in range(0,len(G)):
+        divlist = []
+        for iter in range(0,len(G)):
+            if iter == k:
+                continue
+            else:
+                divlist.append(G[iter]) 
+        gprime = DivisionAlgorithm(G[k], divlist)["Remainder"]
+        G[k] = gprime
+    return G
+
 
 PolynomialRing = PolynomialRingCreator()
-A = PolynomialRing(["X","Y","Z"],Q)
-A("ChangeOrder")(LEX)
-MonomialDivides(A("X*Y*Z"), A("X^2*Y^2"))
-DivisionAlgorithm(A("X^7*Y^2 + X^3*Y^2 - Y + 1"), [A("X*Y^2 - X"), A("X-Y^3")])
+A = PolynomialRing(["X","Y"],Q)
+f = A("X^3 - 2*X*Y")
+g = A("X^2*Y - 2*Y^2 + X")
+
+
+
+B = PolynomialRing(["X", "Y", "Z"], Q)
+B("ChangeOrder")(LEX)
+f = B("X^2 + Y^2 + Z^2 - 1")
+g = B("X^2 + Z^2 - Y")
+h = B("X - Z")
+
