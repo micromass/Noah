@@ -458,6 +458,8 @@ def FindMainField(string):
                 k = FindMainField(string[1:])
                 if k == "Primitive":
                     return 0
+                elif string[k+1] in ["*", "/","^"]:
+                    return 0
                 elif string[k+1] == "(":
                     return 0
             elif Depth == 0:
@@ -1778,9 +1780,9 @@ g = A("X^2*Y - 2*Y^2 + X")
 
 
 
-B = PolynomialRing(["X", "Y", "Z"], Q)
+B = PolynomialRing(["U", "V", "X", "Y", "Z"], Q)
 B("ChangeOrder")(LEX)
-f = B("X^2 + Y^2 + Z^2 - 1")
-g = B("X^2 + Z^2 - Y")
-h = B("X - Z")
+f = B("X - U*V")
+g = B("Y - V")
+h = B("Z - U^2")
 
