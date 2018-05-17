@@ -95,7 +95,7 @@ def Modulo():
                 else:
                     raise TypeError('Arguments are of wrong types')
             def __floordiv__(self,other):
-                if isinstance(other, aux):
+                if not isinstance(other, aux):
                     raise TypeError('Arguments are of wrong types')
                 elif is_prime(n):
                     return self / other
@@ -103,7 +103,7 @@ def Modulo():
                     raise TypeError('Ring is not a Euclidean Domain')
                     
             def __mod__(self,other):
-                if isinstance(other, aux):
+                if not isinstance(other, aux):
                     raise TypeError('Arguments are of wrong types')
                 elif is_prime(n):
                     if IsZero(other):
@@ -160,9 +160,9 @@ def Modulo():
             elif input == "HasZeroDivisors":
                 return not is_prime(n)
             elif input == "HasInverses":
-                return not is_prime(n)
+                return is_prime(n)
             elif input == "HasDivAlgo":
-                return not is_prime(n)
+                return is_prime(n)
             elif input == "IsCommutative":
                 return True
             elif input == "Ordered":
@@ -411,7 +411,7 @@ def Bezout(a,b):
             u,g,x,y = Identity(category),a,Zero(category),b
             while not IsZero(y):
                 u,g,x,y = x,y,u-x*(g // y), g % y
-            v = (g-a*u)/b
+            v = (g-a*u)//b
             if category == Z:
                 aux = math.ceil(-u*g // b)
                 u = u + aux*b//g
@@ -698,9 +698,14 @@ def RingOfFractionsCreator():
                     return other <= self
                 def __repr__(self):
                     if IsInvertible(self.denominator):
-                        self.numerator = self.numerator // self.denominator
-                        self.denominator = 1
-                        return str(self.numerator)
+                        if IntDom == Z:
+                            self.numerator = self.numerator // self.denominator
+                            self.denominator = Identity(IntDom)
+                            return str(self.numerator)
+                        else:
+                            self.numerator = self.numerator / self.denominator
+                            self.denominator = Identity(IntDom)
+                            return str(self.numerator)
                     else:
                         return "(" + str(self.numerator) + "/" + str(self.denominator) + ")"
                 def ElementOf(self):
@@ -1212,6 +1217,23 @@ def PolynomialRingCreator():
                         return self / aux(other)
                     else:
                         raise TypeError('Arguments are of wrong types')
+                def __floordiv__(self,other):
+                    if isinstance(self,aux):
+                        if len(Variables) == 1:
+                            return DivisionAlgorithm(self,[other])['Quotient'][0]
+                        else:
+                            raise TypeError('Polynomial must have one variable only')
+                    else:
+                        raise TypeError('Arguments are of wrong types')
+                def __mod__(self,other):
+                    if isinstance(self,aux):
+                        if len(Variables) == 1:
+                            return DivisionAlgorithm(self,[other])['Remainder']
+                        else:
+                            raise TypeError('Polynomial must have one variable only')
+                    else:
+                        raise TypeError('Arguments are of wrong types')                
+                    
                 def divides(self,b):
                     if isinstance(self,aux):
                         if not len(self.value) == 1:
@@ -1432,6 +1454,8 @@ def PolynomialRingCreator():
                     return OrderExternal
                 elif input == "Identity":
                     return aux(Identity(Rng))
+                elif input == "Ordered":
+                    return False
                 elif input == "HasIdentity":
                     return True
                 elif input == "IsRng":
@@ -1774,15 +1798,20 @@ def ReduceGrobner(listt):
 
 
 PolynomialRing = PolynomialRingCreator()
-A = PolynomialRing(["X","Y"],Q)
-f = A("X^3 - 2*X*Y")
-g = A("X^2*Y - 2*Y^2 + X")
+
+C1 = Mod(7)
+
+CC = PolynomialRing(["X"], C1)
+
+a = CC("X^5 + 3*X^4 - 5*X^3-3*X^2+2*X+2")
+b = CC("X^5 + X^4 - 2*X^3 + 4*X^2 + X + 5")
+
+A = PolynomialRing(["A","B","C","D","E","F","W"],Q)
+AA = RingOfFractions(A)
 
 
 
-B = PolynomialRing(["U", "V", "X", "Y", "Z"], Q)
+B = PolynomialRing(["T", "X", "Y"], AA)
 B("ChangeOrder")(LEX)
-f = B("X - U*V")
-g = B("Y - V")
-h = B("Z - U^2")
-
+f = B("((1-T)^2 + 2*T*(1-T)*W + T^2)*X - A*(1-T)^2 - 2*T*(1-T)*W*B - C*T^2")
+g = B("((1-T)^2 + 2*T*(1-T)*W + T^2)*Y - D*(1-T)^2 - 2*T*(1-T)*W*E - F*T^2")
